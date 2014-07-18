@@ -1,0 +1,33 @@
+{
+  "name": "dependency-tree",
+  "version": "0.0.0",
+  "description": "Utilities for interacting with the dependency tree of a module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "tree-as-list": "bin/treeAsList.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:mrjoelkemp/node-dependency-tree.git"
+  },
+  "keywords": [
+    "AMD",
+    "dependency",
+    "tree",
+    "module",
+    "requirejs"
+  ],
+  "author": "Joel Kemp <joel@mrjoelkemp.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mrjoelkemp/node-dependency-tree/issues"
+  },
+  "homepage": "https://github.com/mrjoelkemp/node-dependency-tree",
+  "dependencies": {
+    "detective-amd": "^2.1.4",
+    "q": "^1.0.1"
+  }
+}
