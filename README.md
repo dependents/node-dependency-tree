@@ -23,7 +23,7 @@ dependency-tree are collected in a list that's returned.
 ```
 var getTreeAslist = require('dependency-tree').getTreeAsList;
 
-getTreeAsList(filename, root).then(function(treeList) {
+getTreeAsList(filename, root, function(treeList) {
   console.log(treeList);
 });
 ```

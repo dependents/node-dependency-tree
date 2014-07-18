@@ -11,48 +11,47 @@ var detective = require('detective-amd'),
  *
  * @param  {String} filename - The path of the module whose tree to traverse
  * @param  {String} root     - The directory containing all JS files
- *
- * @returns {Promise} (String[]) => null - Resolves with all unique, visited dependencies
+ * @param  {Function} cb     - Executed with the list of nodes
  */
-module.exports.getTreeAsList = function traverse(filename, root) {
-  var dependencies;
+module.exports.getTreeAsList = function (filename, root, cb) {
+  if (! filename) throw new Error('filename not given');
+  if (! root) throw new Error('root not given');
+  if (! cb) throw new Error('cb not given');
 
-  if (typeof traverse.results === 'undefined') {
-    filename = path.resolve(process.cwd(), filename);
-    traverse.results = [filename];
+  filename = path.resolve(process.cwd(), filename);
+
+  var results = [filename],
+      visited = {};
+
+  visited[filename] = true;
+
+  function traverse(filename, root) {
+    var dependencies;
+
+    try {
+      dependencies = detective(fs.readFileSync(filename));
+    } catch(e) {
+      dependencies = [];
+    }
+
+    if (dependencies.length) {
+      dependencies = avoidLoaders(dependencies);
+      dependencies = resolveFilepaths(dependencies, filename, root);
+      dependencies = avoidDuplicates(dependencies, visited);
+    }
+
+    results = results.concat(dependencies);
+
+    return q.all(dependencies.map(function(dep) {
+      return traverse(dep, root);
+    }))
+    .then(function() {
+      return results;
+    });
   }
-  if (typeof traverse.visited === 'undefined') {
-    traverse.visited = {};
-    traverse.visited[filename] = true;
-  }
 
-  try {
-    dependencies = detective(fs.readFileSync(filename));
-  } catch(e) {
-    return done();
-  }
-
-  if (! dependencies.length) {
-    return done();
-  }
-
-  dependencies = avoidLoaders(dependencies);
-  dependencies = resolveFilepaths(dependencies, filename, root);
-  dependencies = avoidDuplicates(dependencies, traverse.visited);
-
-  traverse.results = traverse.results.concat(dependencies);
-
-  return q.all(dependencies.map(function(dep) {
-    return traverse(dep, root);
-  }))
-  .then(function() {
-    return traverse.results;
-  });
+  if (cb) traverse(filename, root).then(cb);
 };
-
-function done() {
-  return q().then(function() { return true; });
-}
 
 /**
  * @param  {String[]} dependencies - dependencies of the given filename
