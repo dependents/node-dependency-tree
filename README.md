@@ -14,7 +14,7 @@ var treeUtils = require('dependency-tree');
 
 ### Supported Utilities
 
-##### treeAsList
+##### getTreeAsList
 
 Returns a promise that resolves with the entire dependency tree as a **flat** list of
 files for a given module. Basically, all files visited during traversal of the
