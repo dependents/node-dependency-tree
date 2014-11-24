@@ -2,9 +2,7 @@
 
 > Utilities for interacting with the dependency tree of a module
 
-`npm install -g dependency-tree`
-
-* You only need the global flag for the shell scripts
+`npm install dependency-tree`
 
 ### Usage
 
@@ -18,6 +16,9 @@ var treeUtils = require('dependency-tree');
 
 Returns the entire dependency tree as a **flat** list of files for a given module. Basically, all files
 visited during traversal of the dependency-tree are returned.
+
+* Works for AMD, CommonJS, ES6 modules and SASS files.
+
 
 ```js
 var getTreeAslist = require('dependency-tree').getTreeAsList;
