@@ -7,8 +7,6 @@ var fs = require('fs');
  * Recursively find all dependencies (avoiding circular) until travering the entire dependency tree
  * and return a flat list of all nodes
  *
- * @todo  Should work for CommonJS
- *
  * @param  {String} filename - The path of the module whose tree to traverse
  * @param  {String} root     - The directory containing all JS files
  * @param  {Function} cb     - Executed with the list of nodes
