@@ -2,7 +2,6 @@ var utils = require('../');
 var assert = require('assert');
 
 describe('getTreeAsList', function() {
-
   function testTreesForFormat(format, ext) {
     ext = ext || '.js';
 
@@ -17,6 +16,24 @@ describe('getTreeAsList', function() {
       });
     });
   }
+
+  it('throws if the filename is missing', function() {
+    assert.throws(function() {
+      utils.getTreeAsList(root, function() {});
+    });
+  });
+
+  it('throws if the root is missing', function() {
+    assert.throws(function() {
+      utils.getTreeAsList(filename, function() {});
+    });
+  });
+
+  it('throws if the callback is missing', function() {
+    assert.throws(function() {
+      utils.getTreeAsList(filename, root);
+    });
+  });
 
   describe('amd', function() {
     testTreesForFormat('amd');
