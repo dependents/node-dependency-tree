@@ -85,7 +85,7 @@ function resolveFilepaths(dependencies, filename, root) {
       dep += fileExt;
 
     // Default to js
-    } else if (depExt !== '.js') {
+    } else if (fileExt === '.js') {
       dep += '.js';
     }
 
