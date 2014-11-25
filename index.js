@@ -7,21 +7,29 @@ var fs = require('fs');
  * Recursively find all dependencies (avoiding circular) until travering the entire dependency tree
  * and return a flat list of all nodes
  *
- * @param  {String} filename - The path of the module whose tree to traverse
- * @param  {String} root     - The directory containing all JS files
- * @param  {Function} cb     - Executed with the list of nodes
+ * @param {String} filename - The path of the module whose tree to traverse
+ * @param {String} root - The directory containing all JS files
+ * @param {Function} cb - Executed with the list of nodes
+ * @param {Object} [visited] - Cache of visited, absolutely pathed files that should not be reprocessed.
+ *                             Used for memoization.
+ *                             Format is a filename -> true lookup table
  */
-module.exports.getTreeAsList = function(filename, root, cb) {
+module.exports.getTreeAsList = function(filename, root, cb, visited) {
   if (!filename) { throw new Error('filename not given'); }
   if (!root) { throw new Error('root not given'); }
-  if (!cb) { throw new Error('cb not given'); }
+  if (!cb) { throw new Error('callback not given'); }
 
   filename = path.resolve(process.cwd(), filename);
+  visited = visited || {};
 
-  var results = [filename];
-  var visited = {};
+  if (visited[filename]) {
+    cb([]);
+    return;
+  }
 
   visited[filename] = true;
+
+  var results = [filename];
 
   function traverse(filename, root) {
     var dependencies;
@@ -47,15 +55,12 @@ module.exports.getTreeAsList = function(filename, root, cb) {
 
     return q.all(dependencies.map(function(dep) {
       return traverse(dep, root);
-    }))
-    .then(function() {
-      return results;
-    });
+    }));
   }
 
-  if (cb) {
-    traverse(filename, root).then(cb);
-  }
+  traverse(filename, root).then(function() {
+    cb(results);
+  });
 };
 
 /**
