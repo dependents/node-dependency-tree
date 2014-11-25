@@ -40,7 +40,14 @@ Prints:
 ]
 ```
 
-Shell version (assuming `npm install -g dependency-tree`):
+**Optional**
+
+* `cache`: 4th argument that is a filename -> true mapping lookup table whose entries will not be processed.
+
+The keys should be absolutely pathed filenames. The values should be `true`.
+
+
+**Shell version** (assuming `npm install -g dependency-tree`):
 
 ```
 tree-as-list filename root

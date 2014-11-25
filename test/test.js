@@ -35,19 +35,53 @@ describe('getTreeAsList', function() {
     });
   });
 
-  describe('amd', function() {
-    testTreesForFormat('amd');
+  describe('memoization (#2)', function() {
+    it('accepts an optional cache for memoization (#2)', function(done) {
+      var filename = __dirname + '/example/amd/a.js';
+      var root = __dirname + '/example/amd';
+      var callback = function(tree) {
+        assert(tree.length === 2);
+        done();
+      };
+
+      var cache = {};
+      // Shouldn't process b.js' tree
+      cache[__dirname + '/example/amd/b.js'] = true;
+
+      utils.getTreeAsList(filename, root, callback, cache);
+    });
+
+    it('returns an empty list if entry point is cached', function(done) {
+      var filename = __dirname + '/example/amd/a.js';
+      var root = __dirname + '/example/amd';
+      var callback = function(tree) {
+        assert(!tree.length);
+        done();
+      };
+
+      var cache = {};
+      // Shouldn't process the first file's tree
+      cache[filename] = true;
+
+      utils.getTreeAsList(filename, root, callback, cache);
+    });
   });
 
-  describe('commonjs', function() {
-    testTreesForFormat('commonjs');
-  });
+  describe('module formats', function() {
+    describe('amd', function() {
+      testTreesForFormat('amd');
+    });
 
-  describe('es6', function() {
-    testTreesForFormat('es6');
-  });
+    describe('commonjs', function() {
+      testTreesForFormat('commonjs');
+    });
 
-  describe('sass', function() {
-    testTreesForFormat('sass', '.scss');
+    describe('es6', function() {
+      testTreesForFormat('es6');
+    });
+
+    describe('sass', function() {
+      testTreesForFormat('sass', '.scss');
+    });
   });
 });
