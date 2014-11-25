@@ -2,6 +2,9 @@ var utils = require('../');
 var assert = require('assert');
 
 describe('getTreeAsList', function() {
+  var filename = __dirname + '/example/amd/a.js';
+  var root = __dirname + '/example/amd';
+
   function testTreesForFormat(format, ext) {
     ext = ext || '.js';
 
@@ -17,21 +20,40 @@ describe('getTreeAsList', function() {
     });
   }
 
-  it('throws if the filename is missing', function() {
-    assert.throws(function() {
-      utils.getTreeAsList(root, function() {});
+  describe('throws', function() {
+    it('throws if the filename is missing', function() {
+      assert.throws(function() {
+        utils.getTreeAsList(root, function() {});
+      });
+    });
+
+    it('throws if the root is missing', function() {
+      assert.throws(function() {
+        utils.getTreeAsList(filename, function() {});
+      });
+    });
+
+    it('throws if the callback is missing', function() {
+      assert.throws(function() {
+        utils.getTreeAsList(filename, root);
+      });
     });
   });
 
-  it('throws if the root is missing', function() {
-    assert.throws(function() {
-      utils.getTreeAsList(filename, function() {});
+  describe('on file error', function() {
+    it('does not throw', function(done) {
+      assert.doesNotThrow(function() {
+        utils.getTreeAsList('foo', root, function() {
+          done();
+        });
+      });
     });
-  });
 
-  it('throws if the callback is missing', function() {
-    assert.throws(function() {
-      utils.getTreeAsList(filename, root);
+    it('returns no dependencies', function(done) {
+      utils.getTreeAsList('foo', root, function(tree) {
+        assert(!tree.length);
+        done();
+      })
     });
   });
 

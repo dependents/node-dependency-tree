@@ -22,7 +22,7 @@ module.exports.getTreeAsList = function(filename, root, cb, visited) {
   filename = path.resolve(process.cwd(), filename);
   visited = visited || {};
 
-  if (visited[filename]) {
+  if (visited[filename] || !fs.existsSync(filename)) {
     cb([]);
     return;
   }
@@ -33,9 +33,11 @@ module.exports.getTreeAsList = function(filename, root, cb, visited) {
 
   function traverse(filename, root) {
     var dependencies;
-    var content = fs.readFileSync(filename, 'utf8');
+    var content;
 
     try {
+      content = fs.readFileSync(filename, 'utf8');
+
       if (isSassFile(filename)) {
         dependencies = precinct(content, 'sass');
       } else {
