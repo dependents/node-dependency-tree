@@ -2,15 +2,15 @@ var utils = require('../');
 var assert = require('assert');
 
 describe('getTreeAsList', function() {
-  var filename = __dirname + '/example/amd/a.js';
   var root = __dirname + '/example/amd';
+  var filename = root + '/a.js';
 
   function testTreesForFormat(format, ext) {
     ext = ext || '.js';
 
     it('returns a list form of the dependency tree for a file', function(done) {
-      var filename = __dirname + '/example/' + format + '/a' + ext;
       var root = __dirname + '/example/' + format;
+      var filename = root + '/a' + ext;
 
       utils.getTreeAsList(filename, root, function(tree) {
         assert(tree instanceof Array);
@@ -19,6 +19,27 @@ describe('getTreeAsList', function() {
       });
     });
   }
+
+  it('excludes Node core modules by default', function(done) {
+    var root = __dirname + '/example/commonjs';
+    var filename = root + '/b.js';
+
+    utils.getTreeAsList(filename, root, function(tree) {
+      assert(tree.length === 1);
+      assert(tree[0].indexOf('b.js') !== -1);
+      done();
+    });
+  });
+
+  it('returns a list of absolutely pathed files', function(done) {
+    var root = __dirname + '/example/commonjs';
+    var filename = root + '/b.js';
+
+    utils.getTreeAsList(filename, root, function(tree) {
+      assert(tree[0].indexOf(process.cwd()) !== -1);
+      done();
+    });
+  });
 
   describe('throws', function() {
     it('throws if the filename is missing', function() {
