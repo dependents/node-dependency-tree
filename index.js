@@ -33,16 +33,9 @@ module.exports.getTreeAsList = function(filename, root, cb, visited) {
 
   function traverse(filename, root) {
     var dependencies;
-    var content;
 
     try {
-      content = fs.readFileSync(filename, 'utf8');
-
-      if (isSassFile(filename)) {
-        dependencies = precinct(content, 'sass');
-      } else {
-        dependencies = precinct(content);
-      }
+      dependencies = precinct.paperwork(filename);
     } catch (e) {
       dependencies = [];
     }
