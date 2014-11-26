@@ -35,7 +35,9 @@ module.exports.getTreeAsList = function(filename, root, cb, visited) {
     var dependencies;
 
     try {
-      dependencies = precinct.paperwork(filename);
+      dependencies = precinct.paperwork(filename, {
+        includeCore: false
+      });
     } catch (e) {
       dependencies = [];
     }

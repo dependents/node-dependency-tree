@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/mrjoelkemp/node-dependency-tree",
   "dependencies": {
-    "precinct": "~2.2.0",
+    "precinct": "~2.3.0",
     "q": "~1.0.1"
   },
   "devDependencies": {
