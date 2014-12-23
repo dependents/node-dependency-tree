@@ -2,6 +2,7 @@ var precinct = require('precinct');
 var q = require('q');
 var path = require('path');
 var fs = require('fs');
+var resolveDependencyPath = require('resolve-dependency-path');
 
 /**
  * Recursively find all dependencies (avoiding circular) until travering the entire dependency tree
@@ -11,8 +12,7 @@ var fs = require('fs');
  * @param {String} root - The directory containing all JS files
  * @param {Function} cb - Executed with the list of nodes
  * @param {Object} [visited] - Cache of visited, absolutely pathed files that should not be reprocessed.
- *                             Used for memoization.
- *                             Format is a filename -> true lookup table
+ *                             Format is a filename -> tree as list lookup table
  */
 module.exports.getTreeAsList = function(filename, root, cb, visited) {
   if (!filename) { throw new Error('filename not given'); }
@@ -22,93 +22,97 @@ module.exports.getTreeAsList = function(filename, root, cb, visited) {
   filename = path.resolve(process.cwd(), filename);
   visited = visited || {};
 
-  if (visited[filename] || !fs.existsSync(filename)) {
+  if (!fs.existsSync(filename)) {
+    // TODO: Support node-style
     cb([]);
     return;
   }
 
-  visited[filename] = true;
-
-  var results = [filename];
-
-  function traverse(filename, root) {
-    var dependencies;
-
-    try {
-      dependencies = precinct.paperwork(filename, {
-        includeCore: false
-      });
-    } catch (e) {
-      dependencies = [];
-    }
-
-    if (dependencies.length) {
-      dependencies = avoidLoaders(dependencies);
-      dependencies = resolveFilepaths(dependencies, filename, root);
-      dependencies = avoidDuplicates(dependencies, visited);
-    }
-
-    results = results.concat(dependencies);
-
-    return q.all(dependencies.map(function(dep) {
-      return traverse(dep, root);
-    }));
+  if (visited[filename]) {
+    // TODO: Support node-style
+    cb(visited[filename]);
+    return;
   }
 
-  traverse(filename, root).then(function() {
-    cb(results);
-  });
+  var results = traverse(filename, root, visited);
+  results = removeDups(results);
+
+  // TODO: Support node-style
+  cb(results);
 };
 
 /**
- * @param  {String[]} dependencies - dependencies of the given filename
+ * Returns the list of dependencies for the given filename
+ * Protected for testing
  * @param  {String} filename
- * @param  {String} root
  * @return {String[]}
  */
-function resolveFilepaths(dependencies, filename, root) {
-  return dependencies.map(function(dep) {
-    var depDir = path.dirname(filename);
-    var fileExt = path.extname(filename);
-    var depExt = path.extname(dep);
+module.exports._getDependencies = function(filename) {
+  var dependencies;
 
-    // Relative paths are about current file, non-relative are about the root
-    if (dep.indexOf('..') === 0 || dep.indexOf('.') === 0) {
-      dep = path.resolve(path.dirname(filename), dep);
+  try {
+    dependencies = precinct.paperwork(filename, {
+      includeCore: false
+    });
+  } catch (e) {
+    dependencies = [];
+  }
 
-    } else {
-      dep = path.resolve(root, dep);
-    }
-
-    // Adopt the current file's extension
-    if (isSassFile(filename) && !depExt && depExt !== fileExt) {
-      dep += fileExt;
-
-    // Default to js
-    } else if (fileExt === '.js') {
-      dep += '.js';
-    }
-
-    return dep;
-  });
+  return dependencies;
 }
 
 /**
- * Note: mutates the cache to note dependencies that were not visited but will be
- * @param  {String[]} dependencies
- * @param  {Object} cache        - A lookup table of visited nodes
+ * @param  {String} filename
+ * @param  {String} root
+ * @param  {Object} visited
  * @return {String[]}
  */
-function avoidDuplicates(dependencies, cache) {
-  return dependencies.filter(function(dep) {
-    var wasVisited = !!cache[dep];
+function traverse(filename, root, visited) {
+  var tree = [filename];
 
-    if (!wasVisited) {
-      cache[dep] = true;
-    }
+  if (visited[filename]) {
+    return visited[filename];
+  }
 
-    return !wasVisited;
+  var dependencies = module.exports._getDependencies(filename);
+
+  if (dependencies.length) {
+    // TODO: Could resolve loaders optionally for a complete tree
+    dependencies = avoidLoaders(dependencies);
+
+    dependencies = dependencies.map(function(dep) {
+      return resolveDependencyPath(dep, filename, root);
+    });
+  }
+
+  dependencies.forEach(function(d) {
+    tree = tree.concat(traverse(d, root, visited));
   });
+
+  visited[filename] = tree;
+  return tree;
+};
+
+/**
+ * Returns a list of unique items from the array
+ *
+ * If only we had es6 Set.
+ *
+ * @param  {String[]} list
+ * @return {String[]}
+ */
+function removeDups(list) {
+  var cache = {};
+  var unique = [];
+
+  list.forEach(function(item) {
+    if (!cache[item]) {
+      unique.push(item);
+      cache[item] = true;
+    }
+  });
+
+  return unique;
 }
 
 /**
@@ -127,13 +131,4 @@ function avoidLoaders(dependencies) {
   return dependencies.filter(function(dep) {
     return !pattern.test(dep);
   });
-}
-
-/**
- * @param  {String}  filename
- * @return {Boolean}
- */
-function isSassFile(filename) {
-  return path.extname(filename) === '.sass' ||
-         path.extname(filename) === '.scss';
 }

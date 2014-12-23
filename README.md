@@ -28,8 +28,8 @@ getTreeAsList(filename, root, function(treeList) {
 });
 ```
 
-* filename: The file whose dependency tree to traverse
-* root: The path to all of your JS files
+* `filename`: The file whose dependency tree to traverse
+* `root`: The path to all of your JS files
 
 Prints:
 
@@ -42,10 +42,8 @@ Prints:
 
 **Optional**
 
-* `cache`: 4th argument that is a filename -> true mapping lookup table whose entries will not be processed.
-
-The keys should be absolutely pathed filenames. The values should be `true`.
-
+* `cache`: 4th argument that's an empty object (or shared across multiple runs of this module)
+used for avoiding redundant subtree generations.
 
 **Shell version** (assuming `npm install -g dependency-tree`):
 
