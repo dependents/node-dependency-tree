@@ -21,6 +21,20 @@ describe('getTreeAsList', function() {
     });
   }
 
+  it('does not choke on cyclic dependencies', function(done) {
+    var root = __dirname + '/example/cyclic';
+    var filename = root + '/a.js';
+
+    var spy = sinon.spy(utils, '_getDependencies');
+
+    utils.getTreeAsList(filename, root, function(tree) {
+      assert(spy.callCount === 2);
+      assert(tree.length);
+      utils._getDependencies.restore();
+      done();
+    });
+  });
+
   it('excludes Node core modules by default', function(done) {
     var root = __dirname + '/example/commonjs';
     var filename = root + '/b.js';
@@ -80,16 +94,25 @@ describe('getTreeAsList', function() {
   });
 
   describe('memoization (#2)', function() {
+    var spy;
+
+    beforeEach(function() {
+      spy = sinon.spy(utils, '_getDependencies');
+    });
+
+    afterEach(function() {
+      utils._getDependencies.restore();
+    });
+
     it('accepts an optional cache object for memoization (#2)', function(done) {
       var filename = __dirname + '/example/amd/a.js';
       var root = __dirname + '/example/amd';
+
       var callback = function(tree) {
         assert(tree.length === 3);
         assert(spy.neverCalledWith(__dirname + '/example/amd/b.js'));
         done();
       };
-
-      var spy = sinon.spy(utils, '_getDependencies');
 
       var cache = {};
 
@@ -101,9 +124,10 @@ describe('getTreeAsList', function() {
       utils.getTreeAsList(filename, root, callback, cache);
     });
 
-    it('returns an empty list if entry point is cached', function(done) {
+    it('returns the precomputed list of a cached entry point', function(done) {
       var filename = __dirname + '/example/amd/a.js';
       var root = __dirname + '/example/amd';
+
       var callback = function(tree) {
         assert(!tree.length);
         done();
@@ -111,7 +135,7 @@ describe('getTreeAsList', function() {
 
       var cache = {};
       // Shouldn't process the first file's tree
-      cache[filename] = true;
+      cache[filename] = [];
 
       utils.getTreeAsList(filename, root, callback, cache);
     });
