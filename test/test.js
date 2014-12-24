@@ -1,5 +1,6 @@
 var utils = require('../');
 var assert = require('assert');
+var sinon = require('sinon');
 
 describe('getTreeAsList', function() {
   var root = __dirname + '/example/amd';
@@ -79,17 +80,23 @@ describe('getTreeAsList', function() {
   });
 
   describe('memoization (#2)', function() {
-    it('accepts an optional cache for memoization (#2)', function(done) {
+    it('accepts an optional cache object for memoization (#2)', function(done) {
       var filename = __dirname + '/example/amd/a.js';
       var root = __dirname + '/example/amd';
       var callback = function(tree) {
-        assert(tree.length === 2);
+        assert(tree.length === 3);
+        assert(spy.neverCalledWith(__dirname + '/example/amd/b.js'));
         done();
       };
 
+      var spy = sinon.spy(utils, '_getDependencies');
+
       var cache = {};
-      // Shouldn't process b.js' tree
-      cache[__dirname + '/example/amd/b.js'] = true;
+
+      cache[__dirname + '/example/amd/b.js'] = [
+        __dirname + '/example/amd/b.js',
+        __dirname + '/example/amd/c.js'
+      ];
 
       utils.getTreeAsList(filename, root, callback, cache);
     });
