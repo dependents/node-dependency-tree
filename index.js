@@ -85,11 +85,18 @@ function traverse(filename, root, visited) {
     });
   }
 
+  // Prevents cycles by eagerly marking the current file as read
+  // so that any dependent dependencies exit
+  visited[filename] = [];
+
   dependencies.forEach(function(d) {
     tree = tree.concat(traverse(d, root, visited));
   });
 
-  visited[filename] = tree;
+  // Prevents redundancy about each memoized step
+  tree = removeDups(tree);
+
+  visited[filename] = visited[filename].concat(tree);
   return tree;
 };
 
