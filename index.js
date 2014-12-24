@@ -5,40 +5,33 @@ var fs = require('fs');
 var resolveDependencyPath = require('resolve-dependency-path');
 
 /**
- * Recursively find all dependencies (avoiding circular) until travering the entire dependency tree
- * and return a flat list of all nodes
+ * Recursively find all dependencies (avoiding circular) traversing the entire dependency tree
+ * and returns a flat list of all unique, visited nodes
  *
  * @param {String} filename - The path of the module whose tree to traverse
  * @param {String} root - The directory containing all JS files
- * @param {Function} cb - Executed with the list of nodes
  * @param {Object} [visited] - Cache of visited, absolutely pathed files that should not be reprocessed.
  *                             Format is a filename -> tree as list lookup table
  */
-module.exports.getTreeAsList = function(filename, root, cb, visited) {
+module.exports = function(filename, root, visited) {
   if (!filename) { throw new Error('filename not given'); }
   if (!root) { throw new Error('root not given'); }
-  if (!cb) { throw new Error('callback not given'); }
 
   filename = path.resolve(process.cwd(), filename);
   visited = visited || {};
 
   if (!fs.existsSync(filename)) {
-    // TODO: Support node-style
-    cb([]);
-    return;
+    return [];
   }
 
   if (visited[filename]) {
-    // TODO: Support node-style
-    cb(visited[filename]);
-    return;
+    return visited[filename];
   }
 
   var results = traverse(filename, root, visited);
   results = removeDups(results);
 
-  // TODO: Support node-style
-  cb(results);
+  return results;
 };
 
 /**

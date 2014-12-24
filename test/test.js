@@ -1,4 +1,4 @@
-var utils = require('../');
+var getTreeAsList = require('../');
 var assert = require('assert');
 var sinon = require('sinon');
 
@@ -9,87 +9,69 @@ describe('getTreeAsList', function() {
   function testTreesForFormat(format, ext) {
     ext = ext || '.js';
 
-    it('returns a list form of the dependency tree for a file', function(done) {
+    it('returns a list form of the dependency tree for a file', function() {
       var root = __dirname + '/example/' + format;
       var filename = root + '/a' + ext;
 
-      utils.getTreeAsList(filename, root, function(tree) {
-        assert(tree instanceof Array);
-        assert(tree.length === 3);
-        done();
-      });
+      var tree = getTreeAsList(filename, root)
+      assert(tree instanceof Array);
+      assert(tree.length === 3);
     });
   }
 
-  it('does not choke on cyclic dependencies', function(done) {
+  it('does not choke on cyclic dependencies', function() {
     var root = __dirname + '/example/cyclic';
     var filename = root + '/a.js';
 
-    var spy = sinon.spy(utils, '_getDependencies');
+    var spy = sinon.spy(getTreeAsList, '_getDependencies');
 
-    utils.getTreeAsList(filename, root, function(tree) {
-      assert(spy.callCount === 2);
-      assert(tree.length);
-      utils._getDependencies.restore();
-      done();
-    });
+    var tree = getTreeAsList(filename, root);
+    assert(spy.callCount === 2);
+    assert(tree.length);
+    getTreeAsList._getDependencies.restore();
   });
 
-  it('excludes Node core modules by default', function(done) {
+  it('excludes Node core modules by default', function() {
     var root = __dirname + '/example/commonjs';
     var filename = root + '/b.js';
 
-    utils.getTreeAsList(filename, root, function(tree) {
-      assert(tree.length === 1);
-      assert(tree[0].indexOf('b.js') !== -1);
-      done();
-    });
+    var tree = getTreeAsList(filename, root);
+    assert(tree.length === 1);
+    assert(tree[0].indexOf('b.js') !== -1);
   });
 
-  it('returns a list of absolutely pathed files', function(done) {
+  it('returns a list of absolutely pathed files', function() {
     var root = __dirname + '/example/commonjs';
     var filename = root + '/b.js';
 
-    utils.getTreeAsList(filename, root, function(tree) {
-      assert(tree[0].indexOf(process.cwd()) !== -1);
-      done();
-    });
+    var tree = getTreeAsList(filename, root);
+    assert(tree[0].indexOf(process.cwd()) !== -1);
   });
 
   describe('throws', function() {
     it('throws if the filename is missing', function() {
       assert.throws(function() {
-        utils.getTreeAsList(root, function() {});
+        getTreeAsList(undefined, root);
       });
     });
 
     it('throws if the root is missing', function() {
       assert.throws(function() {
-        utils.getTreeAsList(filename, function() {});
-      });
-    });
-
-    it('throws if the callback is missing', function() {
-      assert.throws(function() {
-        utils.getTreeAsList(filename, root);
+        getTreeAsList(filename);
       });
     });
   });
 
   describe('on file error', function() {
-    it('does not throw', function(done) {
+    it('does not throw', function() {
       assert.doesNotThrow(function() {
-        utils.getTreeAsList('foo', root, function() {
-          done();
-        });
+        getTreeAsList('foo', root);
       });
     });
 
-    it('returns no dependencies', function(done) {
-      utils.getTreeAsList('foo', root, function(tree) {
-        assert(!tree.length);
-        done();
-      })
+    it('returns no dependencies', function() {
+      var tree = getTreeAsList('foo', root);
+      assert(!tree.length);
     });
   });
 
@@ -97,23 +79,16 @@ describe('getTreeAsList', function() {
     var spy;
 
     beforeEach(function() {
-      spy = sinon.spy(utils, '_getDependencies');
+      spy = sinon.spy(getTreeAsList, '_getDependencies');
     });
 
     afterEach(function() {
-      utils._getDependencies.restore();
+      getTreeAsList._getDependencies.restore();
     });
 
-    it('accepts an optional cache object for memoization (#2)', function(done) {
+    it('accepts an optional cache object for memoization (#2)', function() {
       var filename = __dirname + '/example/amd/a.js';
       var root = __dirname + '/example/amd';
-
-      var callback = function(tree) {
-        assert(tree.length === 3);
-        assert(spy.neverCalledWith(__dirname + '/example/amd/b.js'));
-        done();
-      };
-
       var cache = {};
 
       cache[__dirname + '/example/amd/b.js'] = [
@@ -121,23 +96,21 @@ describe('getTreeAsList', function() {
         __dirname + '/example/amd/c.js'
       ];
 
-      utils.getTreeAsList(filename, root, callback, cache);
+      var tree = getTreeAsList(filename, root, cache);
+      assert(tree.length === 3);
+      assert(spy.neverCalledWith(__dirname + '/example/amd/b.js'));
     });
 
-    it('returns the precomputed list of a cached entry point', function(done) {
+    it('returns the precomputed list of a cached entry point', function() {
       var filename = __dirname + '/example/amd/a.js';
       var root = __dirname + '/example/amd';
-
-      var callback = function(tree) {
-        assert(!tree.length);
-        done();
-      };
 
       var cache = {};
       // Shouldn't process the first file's tree
       cache[filename] = [];
 
-      utils.getTreeAsList(filename, root, callback, cache);
+      var tree = getTreeAsList(filename, root, cache);
+      assert(!tree.length);
     });
   });
 
