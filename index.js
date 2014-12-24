@@ -73,8 +73,12 @@ function traverse(filename, root, visited) {
     // TODO: Could resolve loaders optionally for a complete tree
     dependencies = avoidLoaders(dependencies);
 
-    dependencies = dependencies.map(function(dep) {
+    dependencies = dependencies
+    .map(function(dep) {
       return resolveDependencyPath(dep, filename, root);
+    })
+    .filter(function(dep) {
+      return fs.existsSync(dep);
     });
   }
 

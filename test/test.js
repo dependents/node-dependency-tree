@@ -19,6 +19,15 @@ describe('getTreeAsList', function() {
     });
   }
 
+  it('does not include files that are not real (#13)', function() {
+    var root = __dirname + '/example/onlyRealDeps';
+    var filename = root + '/a.js';
+
+    var tree = getTreeAsList(filename, root);
+    assert(tree.length === 1);
+    assert(tree[0].indexOf('a.js') !== -1);
+  });
+
   it('does not choke on cyclic dependencies', function() {
     var root = __dirname + '/example/cyclic';
     var filename = root + '/a.js';
