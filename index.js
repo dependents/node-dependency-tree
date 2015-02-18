@@ -12,26 +12,53 @@ var resolveDependencyPath = require('resolve-dependency-path');
  * @param {String} root - The directory containing all JS files
  * @param {Object} [visited] - Cache of visited, absolutely pathed files that should not be reprocessed.
  *                             Format is a filename -> tree as list lookup table
+ * @param {Boolean} [isListForm=false]
  */
-module.exports = function(filename, root, visited) {
+module.exports = function(filename, root, visited, isListForm) {
   if (!filename) { throw new Error('filename not given'); }
-  if (!root) { throw new Error('root not given'); }
+  if (!root) { throw new Error('root directory not given'); }
 
   filename = path.resolve(process.cwd(), filename);
   visited = visited || {};
 
   if (!fs.existsSync(filename)) {
-    return [];
+    return isListForm ? [] : {};
   }
 
   if (visited[filename]) {
     return visited[filename];
   }
 
-  var results = traverse(filename, root, visited);
-  results = removeDups(results);
+  var tree;
+  var results = traverse(filename, root, visited, isListForm);
 
-  return results;
+  if (isListForm) {
+    tree = removeDups(results);
+
+  } else {
+    tree = {};
+    tree[filename] = results;
+  }
+
+  return tree;
+};
+
+/**
+ * Executes a post-order depth first search on the dependency tree and returns a
+ * list of absolute file paths. The order of files in the list will be the
+ * proper concatenation order for bundling.
+ *
+ * In other words, for any file in the list, all of that file's dependencies (direct or indirect) will appear at
+ * lower indeces in the list. The root (entry point) file will therefore appear
+ * last.
+ *
+ * The list will not contain duplicates.
+ *
+ * Params are those of module.exports
+ */
+module.exports.toList = function(filename, root, visited) {
+  // Can't pass args since visited is optional and positions will be off
+  return module.exports(filename, root, visited, true);
 };
 
 /**
@@ -52,16 +79,19 @@ module.exports._getDependencies = function(filename) {
   }
 
   return dependencies;
-}
+};
 
 /**
  * @param  {String} filename
  * @param  {String} root
  * @param  {Object} visited
- * @return {String[]}
+ * @param  {Boolean} [isListForm=false] - Whether or not to collect the tree in a list form
+ * @return {Object|String[]}
  */
-function traverse(filename, root, visited) {
-  var tree = [filename];
+function traverse(filename, root, visited, isListForm) {
+  isListForm = !!isListForm;
+
+  var subTree = isListForm ? [] : {};
 
   if (visited[filename]) {
     return visited[filename];
@@ -84,18 +114,28 @@ function traverse(filename, root, visited) {
 
   // Prevents cycles by eagerly marking the current file as read
   // so that any dependent dependencies exit
-  visited[filename] = [];
+  visited[filename] = isListForm ? [] : {};
 
   dependencies.forEach(function(d) {
-    tree = tree.concat(traverse(d, root, visited));
+    if (isListForm) {
+      subTree = subTree.concat(traverse(d, root, visited, isListForm));
+    } else {
+      subTree[d] = traverse(d, root, visited);
+    }
   });
 
-  // Prevents redundancy about each memoized step
-  tree = removeDups(tree);
+  if (isListForm) {
+    // Prevents redundancy about each memoized step
+    subTree = removeDups(subTree);
+    subTree.push(filename);
+    visited[filename] = visited[filename].concat(subTree);
 
-  visited[filename] = visited[filename].concat(tree);
-  return tree;
-};
+  } else {
+    visited[filename] = subTree;
+  }
+
+  return subTree;
+}
 
 /**
  * Returns a list of unique items from the array

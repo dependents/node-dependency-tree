@@ -2,12 +2,29 @@
 
 'use strict';
 
-var treeAsList = require('../');
-var filename = process.argv[2];
-var root = process.argv[3];
+var dependencyTree = require('../');
+var program = require('commander');
 
-var tree = treeAsList(filename, root);
+program
+  .version(require('../package.json').version)
+  .usage('[options] <filename>')
+  .option('-d, --directory <path>', 'location of files of supported filetypes')
+  .option('--list-form', 'output the list form of the tree (one element per line)')
+  .parse(process.argv);
 
-tree.forEach(function(node) {
-  console.log(node);
-});
+var directory = program.directory;
+var listForm = program.listForm;
+var filename = program.args[0];
+
+var tree;
+
+if (listForm) {
+  tree = dependencyTree.toList(filename, directory);
+  tree.forEach(function(node) {
+    console.log(node);
+  });
+
+} else {
+  tree = dependencyTree(filename, directory);
+  console.log(JSON.stringify(tree));
+}

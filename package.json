@@ -14,11 +14,14 @@
     "url": "git@github.com:mrjoelkemp/node-dependency-tree.git"
   },
   "keywords": [
-    "AMD",
     "dependency",
     "tree",
     "module",
-    "requirejs"
+    "requirejs",
+    "AMD",
+    "commonjs",
+    "es6",
+    "sass"
   ],
   "author": "Joel Kemp <joel@mrjoelkemp.com>",
   "license": "MIT",
@@ -27,6 +30,7 @@
   },
   "homepage": "https://github.com/mrjoelkemp/node-dependency-tree",
   "dependencies": {
+    "commander": "~2.6.0",
     "precinct": "~2.4.1",
     "q": "~1.0.1",
     "resolve-dependency-path": "~1.0.1"
