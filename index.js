@@ -4,6 +4,9 @@ var path = require('path');
 var fs = require('fs');
 var resolveDependencyPath = require('resolve-dependency-path');
 
+var PRE_ORDER = 1;
+var POST_ORDER = 2;
+
 /**
  * Recursively find all dependencies (avoiding circular) traversing the entire dependency tree
  * and returns a flat list of all unique, visited nodes
@@ -30,9 +33,88 @@ module.exports = function(filename, root, visited) {
 
   var results = traverse(filename, root, visited);
   results = removeDups(results);
-
-  return results;
+  var tree = {
+    root: filename,
+    nodes: visited
+  };
+  return tree;
 };
+
+/**
+ * Executes a pre-order depth first search on the dependency tree and returns a
+ * list of absolute file paths. The order of files in the list will be the order
+ * in which the module processed files as it built the tree. The root (entry
+ * point) file will be first, followed by the root file's first dependency and
+ * the first dependency's dependencies. The list will not contain duplicates.
+ *
+ * @param {Object} tree - Tree object produced by this module.
+ */
+module.exports.traversePreOrder = function(tree) {
+  if (!tree) { throw new Error('tree not given'); }
+  if (!tree.root) { throw new Error('Tree object is missing root'); }
+  if (!tree.nodes) { throw new Error('Tree object is missing nodes'); }
+
+  return traverseTree(tree.root, tree.nodes, {}, PRE_ORDER);
+};
+
+/**
+ * Executes a post-order depth first search on the dependency tree and returns a
+ * list of absolute file paths. The order of files in the list will be the
+ * proper concatenation order for bundling. In other words, for any file in the
+ * list, all of that file's dependencies (direct or indirect) will appear at
+ * lower indeces in the list. The root (entry point) file will therefore appear
+ * last. The list will not contain duplicates.
+ *
+ * @param {Object} tree - Tree object produced by this module.
+ */
+module.exports.traversePostOrder = function(tree) {
+  if (!tree) { throw new Error('tree not given'); }
+  if (!tree.root) { throw new Error('Tree object is missing root'); }
+  if (!tree.nodes) { throw new Error('Tree object is missing nodes'); }
+
+  return traverseTree(tree.root, tree.nodes, {}, POST_ORDER);
+};
+
+/**
+ * Executes an ordered depth first search on the dependency tree and returns a
+ * list of nodes.
+ *
+ * @param {String} root - The root or current node.
+ * @param {Object} nodes - Child map (node -> children[])
+ * @param {Object} visited - Map of visited nodes (node -> true || false)
+ * @param {Integer} order - 1 = pre-order; 2 = post-order
+ */
+function traverseTree(root, nodes, visited, order) {
+  if ((order !== PRE_ORDER) && (order !== POST_ORDER)) {
+    throw new Error ('Traversal order not supported: ' + order);
+  }
+
+  var list = [];
+  if (order === PRE_ORDER) {
+    list.push(root);
+  }
+
+  // If the root has already been visited, it, and its dependencies, will
+  // already appear in the list.
+  if (visited[root]) {
+    return [];
+  }
+
+  // Mark the node as visited
+  visited[root] = true;
+
+  var children = nodes[root] || [];
+
+  children.forEach(function(child) {
+    list = list.concat(traverseTree(child, nodes, visited, order));
+  });
+
+  if (order === POST_ORDER) {
+    list.push(root);
+  }
+
+  return list;
+}
 
 /**
  * Returns the list of dependencies for the given filename
@@ -52,7 +134,7 @@ module.exports._getDependencies = function(filename) {
   }
 
   return dependencies;
-}
+};
 
 /**
  * @param  {String} filename
@@ -61,7 +143,7 @@ module.exports._getDependencies = function(filename) {
  * @return {String[]}
  */
 function traverse(filename, root, visited) {
-  var tree = [filename];
+  var tree = [];
 
   if (visited[filename]) {
     return visited[filename];
@@ -94,8 +176,9 @@ function traverse(filename, root, visited) {
   tree = removeDups(tree);
 
   visited[filename] = visited[filename].concat(tree);
+  tree.push(filename);
   return tree;
-};
+}
 
 /**
  * Returns a list of unique items from the array
