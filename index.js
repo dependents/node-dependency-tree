@@ -3,34 +3,42 @@ var q = require('q');
 var path = require('path');
 var fs = require('fs');
 var resolveDependencyPath = require('resolve-dependency-path');
+var amdModuleLookup = require('module-lookup-amd');
 
 /**
  * Recursively find all dependencies (avoiding circular) traversing the entire dependency tree
  * and returns a flat list of all unique, visited nodes
  *
- * @param {String} filename - The path of the module whose tree to traverse
- * @param {String} root - The directory containing all JS files
- * @param {Object} [visited] - Cache of visited, absolutely pathed files that should not be reprocessed.
- *                             Format is a filename -> tree as list lookup table
+ * @param {Object} options
+ * @param {String} options.filename - The path of the module whose tree to traverse
+ * @param {String} options.root - The directory containing all JS files
+ * @param {Function} options.success - Executed with the list of files in the dependency tree
+ * @param {Object} [options.visited] - Cache of visited, absolutely pathed files that should not be reprocessed.
+ *                                   Used for memoization.
+ *                                   Format is a filename -> true lookup table
+ * @param {String} [options.config] - RequireJS config file (for aliased dependency paths)
  * @param {Boolean} [isListForm=false]
  */
-module.exports = function(filename, root, visited, isListForm) {
+module.exports = function(options) {
+  var filename = options.filename;
+  var isListForm = options.isListForm;
+
   if (!filename) { throw new Error('filename not given'); }
-  if (!root) { throw new Error('root directory not given'); }
+  if (!options.directory) { throw new Error('root directory not given'); }
 
   filename = path.resolve(process.cwd(), filename);
-  visited = visited || {};
+  options.cache = options.cache || {};
 
   if (!fs.existsSync(filename)) {
     return isListForm ? [] : {};
   }
 
-  if (visited[filename]) {
-    return visited[filename];
+  if (options.cache[filename]) {
+    return options.cache[filename];
   }
 
   var tree;
-  var results = traverse(filename, root, visited, isListForm);
+  var results = traverse(options);
 
   if (isListForm) {
     tree = removeDups(results);
@@ -42,6 +50,81 @@ module.exports = function(filename, root, visited, isListForm) {
 
   return tree;
 };
+
+/**
+ * @param  {Object} options
+ * @param  {String} options.filename
+ * @param  {String} options.directory
+ * @param  {String} options.cache
+ * @param  {Object} options.requireJSConfig
+ * @param  {Boolean} [options.isListForm=false] - Whether or not to collect the tree in a list form
+ * @return {Object|String[]}
+ */
+function traverse(options) {
+  var filename = options.filename;
+  var root = options.directory;
+  var visited = options.cache;
+  var isListForm = !!options.isListForm;
+  var config = options.requireJSConfig;
+  var subTree = isListForm ? [] : {};
+
+  if (visited[filename]) {
+    return visited[filename];
+  }
+
+  var dependencies = module.exports._getDependencies(filename);
+
+  if (dependencies.length) {
+
+    if (config) {
+      dependencies = dependencies.map(function(dependency) {
+        return amdModuleLookup(config, dependency);
+      });
+    } else {
+      // TODO: Could resolve loaders optionally for a complete tree
+      dependencies = avoidLoaders(dependencies);
+    }
+
+    dependencies = dependencies
+    .map(function(dep) {
+      return resolveDependencyPath(dep, filename, root);
+    })
+    .filter(function(dep) {
+      return fs.existsSync(dep);
+    });
+  }
+
+  // Prevents cycles by eagerly marking the current file as read
+  // so that any dependent dependencies exit
+  visited[filename] = isListForm ? [] : {};
+
+  dependencies.forEach(function(d) {
+    var options = {
+      filename: d,
+      directory: root,
+      cache: visited
+    };
+
+    if (isListForm) {
+      options.isListForm = isListForm;
+      subTree = subTree.concat(traverse(options));
+    } else {
+      subTree[d] = traverse(options);
+    }
+  });
+
+  if (isListForm) {
+    // Prevents redundancy about each memoized step
+    subTree = removeDups(subTree);
+    subTree.push(filename);
+    visited[filename] = visited[filename].concat(subTree);
+
+  } else {
+    visited[filename] = subTree;
+  }
+
+  return subTree;
+}
 
 /**
  * Executes a post-order depth first search on the dependency tree and returns a
@@ -56,9 +139,9 @@ module.exports = function(filename, root, visited, isListForm) {
  *
  * Params are those of module.exports
  */
-module.exports.toList = function(filename, root, visited) {
-  // Can't pass args since visited is optional and positions will be off
-  return module.exports(filename, root, visited, true);
+module.exports.toList = function(options) {
+  options.isListForm = true;
+  return module.exports(options);
 };
 
 /**
@@ -80,62 +163,6 @@ module.exports._getDependencies = function(filename) {
 
   return dependencies;
 };
-
-/**
- * @param  {String} filename
- * @param  {String} root
- * @param  {Object} visited
- * @param  {Boolean} [isListForm=false] - Whether or not to collect the tree in a list form
- * @return {Object|String[]}
- */
-function traverse(filename, root, visited, isListForm) {
-  isListForm = !!isListForm;
-
-  var subTree = isListForm ? [] : {};
-
-  if (visited[filename]) {
-    return visited[filename];
-  }
-
-  var dependencies = module.exports._getDependencies(filename);
-
-  if (dependencies.length) {
-    // TODO: Could resolve loaders optionally for a complete tree
-    dependencies = avoidLoaders(dependencies);
-
-    dependencies = dependencies
-    .map(function(dep) {
-      return resolveDependencyPath(dep, filename, root);
-    })
-    .filter(function(dep) {
-      return fs.existsSync(dep);
-    });
-  }
-
-  // Prevents cycles by eagerly marking the current file as read
-  // so that any dependent dependencies exit
-  visited[filename] = isListForm ? [] : {};
-
-  dependencies.forEach(function(d) {
-    if (isListForm) {
-      subTree = subTree.concat(traverse(d, root, visited, isListForm));
-    } else {
-      subTree[d] = traverse(d, root, visited);
-    }
-  });
-
-  if (isListForm) {
-    // Prevents redundancy about each memoized step
-    subTree = removeDups(subTree);
-    subTree.push(filename);
-    visited[filename] = visited[filename].concat(subTree);
-
-  } else {
-    visited[filename] = subTree;
-  }
-
-  return subTree;
-}
 
 /**
  * Returns a list of unique items from the array
