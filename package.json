@@ -31,9 +31,10 @@
   "homepage": "https://github.com/mrjoelkemp/node-dependency-tree",
   "dependencies": {
     "commander": "~2.6.0",
+    "module-lookup-amd": "~1.0.0",
     "precinct": "~2.4.1",
     "q": "~1.0.1",
-    "resolve-dependency-path": "~1.0.1"
+    "resolve-dependency-path": "~1.0.2"
   },
   "devDependencies": {
     "jscs": "~1.7.3",
