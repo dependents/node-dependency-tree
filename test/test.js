@@ -171,6 +171,10 @@ describe('dependencyTree', function() {
     describe('sass', function() {
       testTreesForFormat('sass', '.scss');
     });
+
+    describe('stylus', function() {
+      testTreesForFormat('stylus', '.styl');
+    });
   });
 
   describe('toList', function() {
@@ -224,6 +228,10 @@ describe('dependencyTree', function() {
 
       describe('sass', function() {
         testToList('sass', '.scss');
+      });
+
+      describe('stylus', function() {
+        testToList('stylus', '.styl');
       });
     });
   });
