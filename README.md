@@ -17,7 +17,7 @@ var tree = dependencyTree('path/to/a/file', 'path/to/all/files');
 var list = dependencyTree.toList('path/to/a/file', 'path/to/all/files');
 ```
 
-* Works for AMD, CommonJS, ES6 modules, and SASS files, basically, any filetype supported by [Precinct](https://github.com/mrjoelkemp/node-precinct).
+* Works for JS (AMD, CommonJS, ES6 modules) and CSS preprocessors (Sass, Stylus); basically, any filetype supported by [Precinct](https://github.com/mrjoelkemp/node-precinct).
 * All core Node modules (assert, path, fs, etc) are removed from the dependency list by default
 
 The object form is a mapping of the dependency tree to the filesystem –
