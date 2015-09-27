@@ -2,7 +2,7 @@ var precinct = require('precinct');
 var q = require('q');
 var path = require('path');
 var fs = require('fs');
-var resolveDependencyPath = require('resolve-dependency-path');
+var cabinet = require('filing-cabinet');
 
 /**
  * Recursively find all dependencies (avoiding circular) traversing the entire dependency tree
@@ -105,7 +105,11 @@ function traverse(filename, root, visited, isListForm) {
 
     dependencies = dependencies
     .map(function(dep) {
-      return resolveDependencyPath(dep, filename, root);
+      return cabinet({
+        partial: dep,
+        filename: filename,
+        directory: root
+      });
     })
     .filter(function(dep) {
       return fs.existsSync(dep);
