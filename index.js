@@ -1,5 +1,4 @@
 var precinct = require('precinct');
-var q = require('q');
 var path = require('path');
 var fs = require('fs');
 var cabinet = require('filing-cabinet');
@@ -162,10 +161,19 @@ function traverse(options) {
       };
 
       debug('cabinet lookup with options', options);
+      var result = cabinet(options);
+      debug('cabinet result ' + result);
 
-      return cabinet(options);
+      if (!path.extname(result)) {
+        debug('extensionless result');
+        result += path.extname(filename);
+        debug('after inheriting extension: ' + result);
+      }
+
+      return result;
     })
     .filter(function(dep) {
+      debug('filtering out files that don\'t exist');
       return fs.existsSync(dep);
     });
   }
