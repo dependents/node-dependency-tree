@@ -79,6 +79,17 @@ describe('dependencyTree', function() {
     assert(Object.keys(tree)[0].indexOf('b.js') !== -1);
   });
 
+  it('traverses installed 3rd party node modules', function() {
+    var root = __dirname + '/example/onlyRealDeps';
+    var filename = root + '/a.js';
+
+    var tree = dependencyTree({filename: filename, root: root});
+    var subTree = tree[filename];
+    assert.ok(Object.keys(subTree).some(function(dep) {
+      return dep === require.resolve('debug');
+    }));
+  });
+
   it('returns a list of absolutely pathed files', function() {
     var root = __dirname + '/example/commonjs';
     var filename = root + '/b.js';
@@ -127,7 +138,7 @@ describe('dependencyTree', function() {
       dependencyTree._getDependencies.restore();
     });
 
-    it('accepts an optional cache object for memoization (#2)', function() {
+    it('accepts a cache object for memoization (#2)', function() {
       var filename = __dirname + '/example/amd/a.js';
       var root = __dirname + '/example/amd';
       var cache = {};
