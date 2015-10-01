@@ -13,7 +13,7 @@ describe('dependencyTree', function() {
       var root = __dirname + '/example/' + format;
       var filename = root + '/a' + ext;
 
-      var tree = dependencyTree(filename, root);
+      var tree = dependencyTree({filename: filename, root: root});
       assert(tree instanceof Object);
       var subTree = tree[filename];
       assert(subTree instanceof Object);
@@ -24,7 +24,7 @@ describe('dependencyTree', function() {
   it('returns an empty object for a non-existent filename', function() {
     var root = __dirname + '/example/extended';
     var filename = root + '/notafile.js';
-    var tree = dependencyTree(filename, root);
+    var tree = dependencyTree({filename: filename, root: root});
     assert(tree instanceof Object);
     assert(!Object.keys(tree).length);
   });
@@ -33,7 +33,7 @@ describe('dependencyTree', function() {
     var root = __dirname + '/example/extended';
     var filename = root + '/a.js';
 
-    var tree = dependencyTree(filename, root);
+    var tree = dependencyTree({filename: filename, root: root});
     assert(tree[filename] instanceof Object);
     // b and c
     var subTree = tree[filename];
@@ -50,11 +50,11 @@ describe('dependencyTree', function() {
     var root = __dirname + '/example/onlyRealDeps';
     var filename = root + '/a.js';
 
-    var tree = dependencyTree(filename, root);
+    var tree = dependencyTree({filename: filename, root: root});
     var subTree = tree[filename];
-
-    assert(Object.keys(subTree).length === 0);
-    assert(Object.keys(tree)[0].indexOf('a.js') !== -1);
+    assert.ok(!Object.keys(subTree).some(function(dep) {
+      return dep.indexOf('not-real') !== -1;
+    }));
   });
 
   it('does not choke on cyclic dependencies', function() {
@@ -63,7 +63,7 @@ describe('dependencyTree', function() {
 
     var spy = sinon.spy(dependencyTree, '_getDependencies');
 
-    var tree = dependencyTree(filename, root);
+    var tree = dependencyTree({filename: filename, root: root});
 
     assert(spy.callCount === 2);
     assert(Object.keys(tree[filename]).length);
@@ -74,7 +74,7 @@ describe('dependencyTree', function() {
     var root = __dirname + '/example/commonjs';
     var filename = root + '/b.js';
 
-    var tree = dependencyTree(filename, root);
+    var tree = dependencyTree({filename: filename, root: root});
     assert(Object.keys(tree[filename]).length === 0);
     assert(Object.keys(tree)[0].indexOf('b.js') !== -1);
   });
@@ -83,7 +83,7 @@ describe('dependencyTree', function() {
     var root = __dirname + '/example/commonjs';
     var filename = root + '/b.js';
 
-    var tree = dependencyTree(filename, root);
+    var tree = dependencyTree({filename: filename, root: root});
     for (var node in tree.nodes) {
       assert(node.indexOf(process.cwd()) !== -1);
     }
@@ -92,13 +92,13 @@ describe('dependencyTree', function() {
   describe('throws', function() {
     it('throws if the filename is missing', function() {
       assert.throws(function() {
-        dependencyTree(undefined, root);
+        dependencyTree({filename: undefined, root: root});
       });
     });
 
     it('throws if the root is missing', function() {
       assert.throws(function() {
-        dependencyTree(filename);
+        dependencyTree({filename: filename});
       });
     });
   });
@@ -106,12 +106,12 @@ describe('dependencyTree', function() {
   describe('on file error', function() {
     it('does not throw', function() {
       assert.doesNotThrow(function() {
-        dependencyTree('foo', root);
+        dependencyTree({filename: 'foo', root: root});
       });
     });
 
     it('returns no dependencies', function() {
-      var tree = dependencyTree('foo', root);
+      var tree = dependencyTree({filename: 'foo', root: root});
       assert(!tree.length);
     });
   });
@@ -137,7 +137,12 @@ describe('dependencyTree', function() {
         __dirname + '/example/amd/c.js'
       ];
 
-      var tree = dependencyTree(filename, root, cache);
+      var tree = dependencyTree({
+        filename: filename,
+        root: root,
+        visited: cache
+      });
+
       assert.equal(Object.keys(tree[filename]).length, 2);
       assert(spy.neverCalledWith(__dirname + '/example/amd/b.js'));
     });
@@ -150,7 +155,11 @@ describe('dependencyTree', function() {
       // Shouldn't process the first file's tree
       cache[filename] = [];
 
-      var tree = dependencyTree(filename, root, cache);
+      var tree = dependencyTree({
+        filename: filename,
+        root: root,
+        visited: cache
+      });
       assert(!tree.length);
     });
   });
@@ -188,7 +197,11 @@ describe('dependencyTree', function() {
         var root = __dirname + '/example/' + format;
         var filename = root + '/a' + ext;
 
-        var list = dependencyTree.toList(filename, root);
+        var list = dependencyTree.toList({
+          filename: filename,
+          root: root
+        });
+
         assert(list instanceof Array);
         assert(list.length);
       });
@@ -197,7 +210,11 @@ describe('dependencyTree', function() {
     it('returns an empty list on a non-existent filename', function() {
       var root = __dirname + '/example/extended';
       var filename = root + '/notafile.js';
-      var list = dependencyTree.toList(filename, root);
+      var list = dependencyTree.toList({
+        filename: filename,
+        root: root
+      });
+
       assert(list instanceof Array);
       assert(!list.length);
     });
@@ -205,7 +222,10 @@ describe('dependencyTree', function() {
     it('orders the visited files by last visited', function() {
       var root = __dirname + '/example/amd';
       var filename = root + '/a.js';
-      var list = dependencyTree.toList(filename, root);
+      var list = dependencyTree.toList({
+        filename: filename,
+        root: root
+      });
 
       assert(list.length === 3);
       assert(list[0] === root + '/c.js');

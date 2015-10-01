@@ -31,7 +31,8 @@
   "homepage": "https://github.com/mrjoelkemp/node-dependency-tree",
   "dependencies": {
     "commander": "^2.6.0",
-    "filing-cabinet": "^1.0.4",
+    "debug": "~2.2.0",
+    "filing-cabinet": "~1.0.5",
     "precinct": "^2.5.0",
     "q": "^1.0.1",
     "resolve-dependency-path": "^1.0.1"
