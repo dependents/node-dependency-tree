@@ -1,2 +1,3 @@
 var path = require('path');
-var resolveDependencyPath = require('resolve-dependency-path');
+var debug = require('debug');
+var notReal = require('not-real');
