@@ -19,12 +19,20 @@ var filename = program.args[0];
 var tree;
 
 if (listForm) {
-  tree = dependencyTree.toList(filename, directory);
+  tree = dependencyTree.toList({
+    filename: filename,
+    root: directory
+  });
+
   tree.forEach(function(node) {
     console.log(node);
   });
 
 } else {
-  tree = dependencyTree(filename, directory);
+  tree = dependencyTree({
+    filename: filename,
+    root: directory
+  });
+
   console.log(JSON.stringify(tree));
 }

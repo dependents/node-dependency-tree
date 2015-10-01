@@ -10,14 +10,22 @@
 var dependencyTree = require('dependency-tree');
 
 // Returns a dependency tree object for the given file
-var tree = dependencyTree('path/to/a/file', 'path/to/all/files');
+var tree = dependencyTree({
+  filename: 'path/to/a/file',
+  root: 'path/to/all/files'
+});
 
 // Returns a post-order traversal (list form) of the tree with duplicate sub-trees pruned.
 // This is useful for bundling source files, because the list gives the concatenation order.
-var list = dependencyTree.toList('path/to/a/file', 'path/to/all/files');
+var list = dependencyTree.toList({
+  filename: 'path/to/a/file',
+  root: 'path/to/all/files'
+});
 ```
 
 * Works for JS (AMD, CommonJS, ES6 modules) and CSS preprocessors (Sass, Stylus); basically, any filetype supported by [Precinct](https://github.com/mrjoelkemp/node-precinct).
+  - For CommonJS modules, 3rd party dependencies (npm installed dependencies) are included in the tree by default
+  - Dependency path resolutions are handled by [filing-cabinet](https://github.com/mrjoelkemp/node-filing-cabinet)
 * All core Node modules (assert, path, fs, etc) are removed from the dependency list by default
 
 The object form is a mapping of the dependency tree to the filesystem –
@@ -45,8 +53,8 @@ for use in the [Dependents](https://github.com/mrjoelkemp/sublime-dependents) pl
 
 **Optional**
 
-* `cache`: 3rd argument that's an empty object (or shared across multiple runs of this module)
-used for avoiding redundant subtree generations.
+* `config`: path to a requirejs config for AMD modules (allows for the result of aliased module paths)
+* `visited`: object used for avoiding redundant subtree generations via memoization.
 
 **Shell version** (assuming `npm install -g dependency-tree`):
 
