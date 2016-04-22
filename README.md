@@ -59,7 +59,7 @@ for use in the [Dependents](https://github.com/mrjoelkemp/sublime-dependents) pl
 **Shell version** (assuming `npm install -g dependency-tree`):
 
 ```
-tree --directory=path/to/all/supported/files [--list-form] filename
+dependency-tree --directory=path/to/all/supported/files [--list-form] filename
 ```
 
 Prints the dependency tree of the given filename as stringified json (by default).
