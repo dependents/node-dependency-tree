@@ -47,6 +47,19 @@ describe('dependencyTree', function() {
     });
   }
 
+  function mockes6() {
+    mockfs({
+      [__dirname + '/example/es6']: {
+        'a.js': `
+          import b from './b';
+          import c from './c';
+        `,
+        'b.js': 'export default function() {};',
+        'c.js': 'export default function() {};'
+      }
+    });
+  }
+
   afterEach(function() {
     mockfs.restore();
   });
@@ -270,6 +283,10 @@ describe('dependencyTree', function() {
     });
 
     describe('es6', function() {
+      beforeEach(function() {
+        mockes6();
+      });
+
       testTreesForFormat('es6');
     });
 
@@ -347,6 +364,10 @@ describe('dependencyTree', function() {
       });
 
       describe('es6', function() {
+        beforeEach(function() {
+          mockes6();
+        });
+
         testToList('es6');
       });
 
