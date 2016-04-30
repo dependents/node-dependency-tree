@@ -78,8 +78,7 @@ module.exports = function(options) {
  * proper concatenation order for bundling.
  *
  * In other words, for any file in the list, all of that file's dependencies (direct or indirect) will appear at
- * lower indeces in the list. The root (entry point) file will therefore appear
- * last.
+ * lower indices in the list. The root (entry point) file will therefore appear last.
  *
  * The list will not contain duplicates.
  *
@@ -98,7 +97,9 @@ module.exports.toList = function(options) {
 
 /**
  * Returns the list of dependencies for the given filename
+ *
  * Protected for testing
+ *
  * @param  {String} filename
  * @return {String[]}
  */
@@ -235,6 +236,7 @@ function removeDups(list) {
 
 /**
  * Returns a list of dependencies that do not include requirejs loaders (like hogan, text, and css)
+ *
  * @param  {String[]} dependencies
  * @return {String[]}
  */

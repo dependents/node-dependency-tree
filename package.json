@@ -4,7 +4,7 @@
   "description": "Get the dependency tree of a module (as a list)",
   "main": "index.js",
   "scripts": {
-    "test": "jscs -p google index.js test/test.js && mocha test/test.js"
+    "test": "jscs index.js test/test.js && ./node_modules/.bin/mocha --compilers js:babel/register test/test.js"
   },
   "bin": {
     "dependency-tree": "bin/cli.js"
@@ -36,8 +36,11 @@
     "precinct": "^2.5.0"
   },
   "devDependencies": {
-    "jscs": "~1.13.1",
+    "babel": "~5.8.38",
+    "jscs": "~2.11.0",
+    "jscs-preset-mrjoelkemp": "~1.0.0",
     "mocha": "~2.0.1",
+    "mock-fs": "~3.9.0",
     "sinon": "~1.12.2"
   }
 }
