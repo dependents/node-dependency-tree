@@ -389,48 +389,86 @@ describe('dependencyTree', function() {
     });
   });
 
-  describe.skip('webpack', function() {
+  describe('webpack', function() {
     beforeEach(function() {
-      mockfs({
-        [__dirname + '/webpack']: {
-          'webpack.config.js': `
-            module.exports = {
-              resolve: {
-                root: __dirname,
-                alias: {
-                  foo: __dirname + '/c'
-                }
-              }
-            };
-          `,
-          'a.js': `
-            import b from 'b';
-            import c from 'foo';
-          `,
-          'b.js': 'export default 1;',
-          'c.js': 'export default 2;'
-        }
-      });
-
-      this._root = __dirname + '/webpack';
+      // Note: not mocking because webpack's resolver needs a real project with dependencies;
+      // otherwise, we'd have to mock a ton of files.
+      this._root = path.join(__dirname, '../');
       this._webpackConfig = this._root + '/webpack.config.js';
+
+      this._testResolution = name => {
+        const results = dependencyTree.toList({
+          filename: `${__dirname}/example/webpack/${name}.js`,
+          root: this._root,
+          webpackConfig: this._webpackConfig
+        });
+
+        assert.ok(results.some(filename => filename.indexOf('node_modules/filing-cabinet') !== -1));
+      };
     });
 
     it('resolves aliased modules', function() {
-      const results = dependencyTree.toList({
-        filename: this._root + '/a.js',
-        root: this._root,
-        webpackConfig: this._webpackConfig
-      });
+      this._testResolution('aliased');
+    });
 
-      assert(results.length === 3);
-      assert(list[0] === root + '/c.js');
-      assert(list[1] === root + '/b.js');
-      assert(list[list.length - 1] === filename);
+    it('resolves unaliased modules', function() {
+      this._testResolution('unaliased');
     });
   });
 
-  describe.skip('requirejs', function() {
-    it('resolves aliased modules');
+  describe('requirejs', function() {
+    beforeEach(function() {
+      mockfs({
+        root: {
+          'lodizzle.js': 'define({})',
+          'require.config.js': `
+            requirejs.config({
+              baseUrl: './',
+              paths: {
+                F: './lodizzle.js'
+              }
+            });
+          `,
+          'a.js': `
+            define([
+              'F'
+            ], function(F) {
+
+            });
+          `,
+          'b.js': `
+            define([
+              './lodizzle'
+            ], function(F) {
+
+            });
+          `
+        }
+      });
+    });
+
+    it('resolves aliased modules', function() {
+      const tree = dependencyTree({
+        filename: 'root/a.js',
+        root: 'root',
+        config: 'root/require.config.js'
+      });
+
+      const filename = path.resolve(process.cwd(), 'root/a.js');
+      const aliasedFile = path.resolve(process.cwd(), 'root/lodizzle.js');
+      assert.ok('root/lodizzle.js' in tree[filename]);
+    });
+
+    it('resolves non-aliased paths', function() {
+      const tree = dependencyTree({
+        filename: 'root/b.js',
+        root: 'root',
+        config: 'root/require.config.js'
+      });
+
+      const filename = path.resolve(process.cwd(), 'root/b.js');
+      const aliasedFile = path.resolve(process.cwd(), 'root/lodizzle.js');
+      assert.ok('root/lodizzle.js' in tree[filename]);
+    });
   });
 });

@@ -20,6 +20,8 @@ module.exports = function(options) {
   var root = options.root;
   var visited = options.visited;
   var isListForm = options.isListForm;
+  var requireConfig = options.config;
+  var webpackConfig = options.webpackConfig;
 
   if (!filename) { throw new Error('filename not given'); }
   if (!root) { throw new Error('root directory not given'); }
@@ -50,6 +52,8 @@ module.exports = function(options) {
     filename: filename,
     root: root,
     visited: visited,
+    config: requireConfig,
+    webpackConfig: webpackConfig,
     isListForm: isListForm
   });
 
@@ -91,6 +95,8 @@ module.exports.toList = function(options) {
     filename: options.filename,
     root: options.root,
     visited: options.visited,
+    config: options.config,
+    webpackConfig: options.webpackConfig,
     isListForm: true
   });
 };
@@ -122,6 +128,8 @@ module.exports._getDependencies = function(filename) {
  * @param  {String} options.filename
  * @param  {String} options.root
  * @param  {Object} options.visited
+ * @param  {String} options.config
+ * @param  {String} options.webpackConfig
  * @param  {Boolean} [options.isListForm=false] - Whether or not to collect the tree in a list form
  * @param  {Boolean} [options.config] - Path to a requirejs config for AMD apps
  * @return {Object|String[]}
@@ -132,6 +140,7 @@ function traverse(options) {
   var visited = options.visited;
   var isListForm = options.isListForm;
   var config = options.config;
+  var webpackConfig = options.webpackConfig;
 
   isListForm = !!isListForm;
 
@@ -158,7 +167,8 @@ function traverse(options) {
         partial: dep,
         filename: filename,
         directory: root,
-        config: {}
+        config: config,
+        webpackConfig: webpackConfig
       };
 
       debug('cabinet lookup with options', options);
@@ -188,7 +198,8 @@ function traverse(options) {
       filename: d,
       root: root,
       visited: visited,
-      config: config
+      config: config,
+      webpackConfig: webpackConfig
     };
 
     if (isListForm) {
