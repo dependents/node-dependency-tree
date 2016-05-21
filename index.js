@@ -158,9 +158,6 @@ function traverse(options) {
   debug('extracted ' + dependencies.length + ' dependencies: ', dependencies);
 
   if (dependencies.length) {
-    debug('avoiding loaders');
-    dependencies = avoidLoaders(dependencies);
-
     dependencies = dependencies
     .map(function(dep) {
       var options = {
@@ -171,21 +168,20 @@ function traverse(options) {
         webpackConfig: webpackConfig
       };
 
-      debug('cabinet lookup with options', options);
       var result = cabinet(options);
-      debug('cabinet result ' + result);
 
-      if (!path.extname(result)) {
-        debug('extensionless result');
-        result += path.extname(filename);
-        debug('after inheriting extension: ' + result);
-      }
+      debug('cabinet result ' + result);
 
       return result;
     })
     .filter(function(dep) {
-      debug('filtering out files that don\'t exist');
-      return fs.existsSync(dep);
+      var exists = fs.existsSync(dep);
+
+      if (!exists) {
+        debug('filtering non-existent: ' + dep);
+      }
+
+      return exists;
     });
   }
 
@@ -226,8 +222,6 @@ function traverse(options) {
 /**
  * Returns a list of unique items from the array
  *
- * If only we had es6 Set.
- *
  * @param  {String[]} list
  * @return {String[]}
  */
@@ -243,23 +237,4 @@ function removeDups(list) {
   });
 
   return unique;
-}
-
-/**
- * Returns a list of dependencies that do not include requirejs loaders (like hogan, text, and css)
- *
- * @param  {String[]} dependencies
- * @return {String[]}
- */
-function avoidLoaders(dependencies) {
-  var avoided = [
-    'hgn!',
-    'css!',
-    'txt!'
-  ];
-  var pattern = new RegExp(avoided.join('|'));
-
-  return dependencies.filter(function(dep) {
-    return !pattern.test(dep);
-  });
 }
