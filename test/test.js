@@ -7,17 +7,19 @@ import path from 'path';
 describe('dependencyTree', function() {
   function testTreesForFormat(format, ext = '.js') {
     it('returns an object form of the dependency tree for a file', function() {
-      const root = __dirname + '/example/' + format;
-      const filename = root + '/a' + ext;
+      const root = `${__dirname}/example/${format}`;
+      const filename = `${root}/a${ext}`;
 
       const tree = dependencyTree({filename, root});
 
       assert(tree instanceof Object);
 
-      const subTree = tree[filename];
+      const aSubTree = tree[filename];
 
-      assert(subTree instanceof Object);
-      assert.equal(Object.keys(subTree).length, 2);
+      assert.ok(aSubTree instanceof Object);
+      const filesInSubTree = Object.keys(aSubTree);
+
+      assert.equal(filesInSubTree.length, 2);
     });
   }
 
@@ -55,7 +57,9 @@ describe('dependencyTree', function() {
           import c from './c';
         `,
         'b.js': 'export default function() {};',
-        'c.js': 'export default function() {};'
+        'c.js': 'export default function() {};',
+        'jsx.js': `import c from './c';\n export default <jsx />;`,
+        'es7.js': `import c from './c';\n export default async function foo() {};`
       }
     });
   }
@@ -284,10 +288,31 @@ describe('dependencyTree', function() {
 
     describe('es6', function() {
       beforeEach(function() {
+        this._directory = __dirname + '/example/es6';
         mockes6();
       });
 
       testTreesForFormat('es6');
+
+      it('resolves files that have jsx', function() {
+        const filename = `${this._directory}/jsx.js`;
+        const {[filename]: tree} = dependencyTree({
+          filename,
+          root: this._directory
+        });
+
+        assert.ok(tree[`${this._directory}/c.js`]);
+      });
+
+      it('resolves files that have es7', function() {
+        const filename = `${this._directory}/es7.js`;
+        const {[filename]: tree} = dependencyTree({
+          filename,
+          root: this._directory
+        });
+
+        assert.ok(tree[`${this._directory}/c.js`]);
+      });
     });
 
     describe('sass', function() {
