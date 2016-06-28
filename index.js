@@ -4,62 +4,64 @@ var fs = require('fs');
 var cabinet = require('filing-cabinet');
 var debug = require('debug')('tree');
 
+function Config(options) {
+  this.filename = options.filename;
+  this.directory = options.directory || options.root;
+  this.visited = options.visited || {};
+  this.isListForm = options.isListForm;
+  this.requireConfig = options.config || options.requireConfig;
+  this.webpackConfig = options.webpackConfig;
+
+  this.filter = options.filter;
+
+  if (!this.filename) { throw new Error('filename not given'); }
+  if (!this.directory) { throw new Error('directory not given'); }
+  if (this.filter && typeof this.filter !== 'function') { throw new Error('filter must be a function'); }
+
+  debug('given filename: ' + this.filename);
+
+  this.filename = path.resolve(process.cwd(), this.filename);
+
+  debug('resolved filename: ' + this.filename);
+  debug('visited: ', this.visited);
+}
+
+Config.prototype.clone = function() {
+  return new Config(this);
+};
+
 /**
  * Recursively find all dependencies (avoiding circular) traversing the entire dependency tree
  * and returns a flat list of all unique, visited nodes
  *
  * @param {Object} options
  * @param {String} options.filename - The path of the module whose tree to traverse
- * @param {String} options.root - The directory containing all JS files
+ * @param {String} options.directory - The directory containing all JS files
+ * @param {String} [options.requireConfig] - The path to a requirejs config
+ * @param {String} [options.webpackConfig] - The path to a webpack config
  * @param {Object} [options.visited] - Cache of visited, absolutely pathed files that should not be reprocessed.
  *                             Format is a filename -> tree as list lookup table
  * @param {Boolean} [options.isListForm=false]
+ * @return {Object}
  */
 module.exports = function(options) {
-  var filename = options.filename;
-  var root = options.root;
-  var visited = options.visited;
-  var isListForm = options.isListForm;
-  var requireConfig = options.config;
-  var webpackConfig = options.webpackConfig;
+  var config = new Config(options);
 
-  if (!filename) { throw new Error('filename not given'); }
-  if (!root) { throw new Error('root directory not given'); }
-
-  debug('given filename: ' + filename);
-
-  filename = path.resolve(process.cwd(), filename);
-
-  debug('resolved filename: ' + filename);
-
-  visited = visited || {};
-
-  debug('visited: ', visited);
-
-  if (!fs.existsSync(filename)) {
-    debug('file ' + filename + ' does not exist');
-    return isListForm ? [] : {};
+  if (!fs.existsSync(config.filename)) {
+    debug('file ' + config.filename + ' does not exist');
+    return config.isListForm ? [] : {};
   }
 
-  if (visited[filename]) {
-    debug('already visited: ' + filename);
-
-    return visited[filename];
+  if (config.visited[config.filename]) {
+    debug('already visited: ' + config.filename);
+    return config.visited[config.filename];
   }
 
-  var tree;
-  var results = traverse({
-    filename: filename,
-    root: root,
-    visited: visited,
-    config: requireConfig,
-    webpackConfig: webpackConfig,
-    isListForm: isListForm
-  });
-
+  var results = traverse(config);
   debug('traversal complete', results);
 
-  if (isListForm) {
+  var tree;
+  if (config.isListForm) {
     debug('list form of results requested');
 
     tree = removeDups(results);
@@ -69,7 +71,7 @@ module.exports = function(options) {
     debug('object form of results requested');
 
     tree = {};
-    tree[filename] = results;
+    tree[config.filename] = results;
   }
 
   debug('final tree', tree);
@@ -89,16 +91,9 @@ module.exports = function(options) {
  * Params are those of module.exports
  */
 module.exports.toList = function(options) {
+  options.isListForm = true;
 
-  // Can't pass args since visited is optional and positions will be off
-  return module.exports({
-    filename: options.filename,
-    root: options.root,
-    visited: options.visited,
-    config: options.config,
-    webpackConfig: options.webpackConfig,
-    isListForm: true
-  });
+  return module.exports(options);
 };
 
 /**
@@ -110,65 +105,45 @@ module.exports.toList = function(options) {
  * @return {String[]}
  */
 module.exports._getDependencies = function(filename) {
-  var dependencies;
-
   try {
-    dependencies = precinct.paperwork(filename, {
+    return precinct.paperwork(filename, {
       includeCore: false
     });
-  } catch (e) {
-    dependencies = [];
-  }
 
-  return dependencies;
+  } catch (e) {
+    debug('error getting dependencies: ' + e.message);
+    debug(e.stack);
+    return [];
+  }
 };
 
 /**
- * @param  {Object} options
- * @param  {String} options.filename
- * @param  {String} options.root
- * @param  {Object} options.visited
- * @param  {String} options.config
- * @param  {String} options.webpackConfig
- * @param  {Boolean} [options.isListForm=false] - Whether or not to collect the tree in a list form
- * @param  {Boolean} [options.config] - Path to a requirejs config for AMD apps
+ * @param  {Config} config
  * @return {Object|String[]}
  */
-function traverse(options) {
-  var filename = options.filename;
-  var root = options.root;
-  var visited = options.visited;
-  var isListForm = options.isListForm;
-  var config = options.config;
-  var webpackConfig = options.webpackConfig;
+function traverse(config) {
+  var subTree = config.isListForm ? [] : {};
 
-  isListForm = !!isListForm;
+  debug('traversing ' + config.filename);
 
-  var subTree = isListForm ? [] : {};
-
-  debug('traversing ' + filename);
-
-  if (visited[filename]) {
-    debug('already visited');
-    return visited[filename];
+  if (config.visited[config.filename]) {
+    debug('already visited ' + config.filename);
+    return config.visited[config.filename];
   }
 
-  var dependencies = module.exports._getDependencies(filename);
+  var dependencies = module.exports._getDependencies(config.filename);
 
   debug('extracted ' + dependencies.length + ' dependencies: ', dependencies);
 
   if (dependencies.length) {
-    dependencies = dependencies
-    .map(function(dep) {
-      var options = {
+    dependencies = dependencies.map(function(dep) {
+      var result = cabinet({
         partial: dep,
-        filename: filename,
-        directory: root,
-        config: config,
-        webpackConfig: webpackConfig
-      };
-
-      var result = cabinet(options);
+        filename: config.filename,
+        directory: config.directory,
+        config: config.requireConfig,
+        webpackConfig: config.webpackConfig
+      });
 
       debug('cabinet result ' + result);
 
@@ -187,33 +162,31 @@ function traverse(options) {
 
   // Prevents cycles by eagerly marking the current file as read
   // so that any dependent dependencies exit
-  visited[filename] = isListForm ? [] : {};
+  config.visited[config.filename] = config.isListForm ? [] : {};
+
+  if (config.filter) {
+    dependencies = dependencies.filter(config.filter);
+  }
 
   dependencies.forEach(function(d) {
-    var options = {
-      filename: d,
-      root: root,
-      visited: visited,
-      config: config,
-      webpackConfig: webpackConfig
-    };
+    var localConfig = config.clone();
+    localConfig.filename = d;
 
-    if (isListForm) {
-      options.isListForm = isListForm;
-      subTree = subTree.concat(traverse(options));
+    if (localConfig.isListForm) {
+      subTree = subTree.concat(traverse(localConfig));
     } else {
-      subTree[d] = traverse(options);
+      subTree[d] = traverse(localConfig);
     }
   });
 
-  if (isListForm) {
+  if (config.isListForm) {
     // Prevents redundancy about each memoized step
     subTree = removeDups(subTree);
-    subTree.push(filename);
-    visited[filename] = visited[filename].concat(subTree);
+    subTree.push(config.filename);
+    config.visited[config.filename] = config.visited[config.filename].concat(subTree);
 
   } else {
-    visited[filename] = subTree;
+    config.visited[config.filename] = subTree;
   }
 
   return subTree;
