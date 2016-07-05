@@ -97,19 +97,18 @@ describe('dependencyTree', function() {
       }
     });
 
-    const root = __dirname + '/extended';
-    const filename = root + '/a.js';
+    const directory = __dirname + '/extended';
+    const filename = directory + '/a.js';
 
-    const tree = dependencyTree({filename, root});
-
+    const tree = dependencyTree({filename, directory});
     assert(tree[filename] instanceof Object);
 
     // b and c
     const subTree = tree[filename];
     assert.equal(Object.keys(subTree).length, 2);
 
-    const bTree = subTree[root + '/b.js'];
-    const cTree = subTree[root + '/c.js'];
+    const bTree = subTree[directory + '/b.js'];
+    const cTree = subTree[directory + '/c.js'];
     // d and e
     assert.equal(Object.keys(bTree).length, 2);
     // f ang g
@@ -123,10 +122,10 @@ describe('dependencyTree', function() {
       }
     });
 
-    const root = __dirname + '/onlyRealDeps';
-    const filename = root + '/a.js';
+    const directory = __dirname + '/onlyRealDeps';
+    const filename = directory + '/a.js';
 
-    const tree = dependencyTree({filename, root});
+    const tree = dependencyTree({filename, directory});
     const subTree = tree[filename];
 
     assert.ok(!Object.keys(subTree).some(dep => dep.indexOf('notReal') !== -1));
@@ -140,12 +139,12 @@ describe('dependencyTree', function() {
       }
     });
 
-    const root = __dirname + '/cyclic';
-    const filename = root + '/a.js';
+    const directory = __dirname + '/cyclic';
+    const filename = directory + '/a.js';
 
     const spy = sinon.spy(dependencyTree, '_getDependencies');
 
-    const tree = dependencyTree({filename, root});
+    const tree = dependencyTree({filename, directory});
 
     assert(spy.callCount === 2);
     assert(Object.keys(tree[filename]).length);
@@ -154,29 +153,29 @@ describe('dependencyTree', function() {
   });
 
   it('excludes Nodejs core modules by default', function() {
-    const root = __dirname + '/example/commonjs';
-    const filename = root + '/b.js';
+    const directory = __dirname + '/example/commonjs';
+    const filename = directory + '/b.js';
 
-    const tree = dependencyTree({filename, root});
+    const tree = dependencyTree({filename, directory});
     assert(Object.keys(tree[filename]).length === 0);
     assert(Object.keys(tree)[0].indexOf('b.js') !== -1);
   });
 
   it('traverses installed 3rd party node modules', function() {
-    const root = __dirname + '/example/onlyRealDeps';
-    const filename = root + '/a.js';
+    const directory = __dirname + '/example/onlyRealDeps';
+    const filename = directory + '/a.js';
 
-    const tree = dependencyTree({filename, root});
+    const tree = dependencyTree({filename, directory});
     const subTree = tree[filename];
 
     assert(Object.keys(subTree).some(dep => dep === require.resolve('debug')));
   });
 
   it('returns a list of absolutely pathed files', function() {
-    const root = __dirname + '/example/commonjs';
-    const filename = root + '/b.js';
+    const directory = __dirname + '/example/commonjs';
+    const filename = directory + '/b.js';
 
-    const tree = dependencyTree({filename, root});
+    const tree = dependencyTree({filename, directory});
 
     for (let node in tree.nodes) {
       assert(node.indexOf(process.cwd()) !== -1);
@@ -196,16 +195,23 @@ describe('dependencyTree', function() {
 
     const tree = dependencyTree.toList({
       filename: 'root/a.js',
-      root: 'root'
+      directory: 'root'
     });
 
     assert(tree.length === 3);
   });
 
   describe('throws', function() {
+    beforeEach(function() {
+      this._directory = __dirname + '/example/commonjs';
+    });
+
     it('throws if the filename is missing', function() {
       assert.throws(function() {
-        dependencyTree({filename: undefined, root});
+        dependencyTree({
+          filename: undefined,
+          directory: this._directory
+        });
       });
     });
 
@@ -214,17 +220,49 @@ describe('dependencyTree', function() {
         dependencyTree({filename});
       });
     });
+
+    it('throws if a supplied filter is not a function', function() {
+      assert.throws(function() {
+        const directory = __dirname + '/example/onlyRealDeps';
+        const filename = directory + '/a.js';
+
+        const tree = dependencyTree({
+          filename,
+          directory,
+          filter: 'foobar'
+        });
+      });
+    });
+
+    it('does not throw on the legacy `root` option', function() {
+      assert.doesNotThrow(function() {
+        const directory = __dirname + '/example/onlyRealDeps';
+        const filename = directory + '/a.js';
+
+        const tree = dependencyTree({
+          filename,
+          root: directory
+        });
+      });
+    });
   });
 
   describe('on file error', function() {
+    beforeEach(function() {
+      this._directory = __dirname + '/example/commonjs';
+    });
+
     it('does not throw', function() {
-      assert.doesNotThrow(function() {
-        dependencyTree({filename: 'foo', root});
+      assert.doesNotThrow(() => {
+        dependencyTree({
+          filename: 'foo',
+          directory: this._directory
+        });
       });
     });
 
     it('returns no dependencies', function() {
-      const tree = dependencyTree({filename: 'foo', root});
+      const tree = dependencyTree({filename: 'foo', directory: this._directory});
       assert(!tree.length);
     });
   });
@@ -240,7 +278,7 @@ describe('dependencyTree', function() {
 
     it('accepts a cache object for memoization (#2)', function() {
       const filename = __dirname + '/example/amd/a.js';
-      const root = __dirname + '/example/amd';
+      const directory = __dirname + '/example/amd';
       const cache = {};
 
       cache[__dirname + '/example/amd/b.js'] = [
@@ -250,7 +288,7 @@ describe('dependencyTree', function() {
 
       const tree = dependencyTree({
         filename,
-        root,
+        directory,
         visited: cache
       });
 
@@ -260,7 +298,7 @@ describe('dependencyTree', function() {
 
     it('returns the precomputed list of a cached entry point', function() {
       const filename = __dirname + '/example/amd/a.js';
-      const root = __dirname + '/example/amd';
+      const directory = __dirname + '/example/amd';
 
       const cache = {
         // Shouldn't process the first file's tree
@@ -269,7 +307,7 @@ describe('dependencyTree', function() {
 
       const tree = dependencyTree({
         filename,
-        root,
+        directory,
         visited: cache
       });
 
@@ -298,7 +336,7 @@ describe('dependencyTree', function() {
         const filename = `${this._directory}/jsx.js`;
         const {[filename]: tree} = dependencyTree({
           filename,
-          root: this._directory
+          directory: this._directory
         });
 
         assert.ok(tree[`${this._directory}/c.js`]);
@@ -308,7 +346,7 @@ describe('dependencyTree', function() {
         const filename = `${this._directory}/es7.js`;
         const {[filename]: tree} = dependencyTree({
           filename,
-          root: this._directory
+          directory: this._directory
         });
 
         assert.ok(tree[`${this._directory}/c.js`]);
@@ -335,12 +373,12 @@ describe('dependencyTree', function() {
   describe('toList', function() {
     function testToList(format, ext = '.js') {
       it('returns a post-order list form of the dependency tree', function() {
-        const root = __dirname + '/example/' + format;
-        const filename = root + '/a' + ext;
+        const directory = __dirname + '/example/' + format;
+        const filename = directory + '/a' + ext;
 
         const list = dependencyTree.toList({
           filename,
-          root
+          directory
         });
 
         assert(list instanceof Array);
@@ -353,12 +391,12 @@ describe('dependencyTree', function() {
         imaginary: {}
       });
 
-      const root = __dirname + '/imaginary';
-      const filename = root + '/notafile.js';
+      const directory = __dirname + '/imaginary';
+      const filename = directory + '/notafile.js';
 
       const list = dependencyTree.toList({
         filename,
-        root
+        directory
       });
 
       assert(list instanceof Array);
@@ -366,16 +404,16 @@ describe('dependencyTree', function() {
     });
 
     it('orders the visited files by last visited', function() {
-      const root = __dirname + '/example/amd';
-      const filename = root + '/a.js';
+      const directory = __dirname + '/example/amd';
+      const filename = directory + '/a.js';
       const list = dependencyTree.toList({
         filename,
-        root
+        directory
       });
 
       assert(list.length === 3);
-      assert(list[0] === root + '/c.js');
-      assert(list[1] === root + '/b.js');
+      assert(list[0] === directory + '/c.js');
+      assert(list[1] === directory + '/b.js');
       assert(list[list.length - 1] === filename);
     });
 
@@ -424,7 +462,7 @@ describe('dependencyTree', function() {
       this._testResolution = name => {
         const results = dependencyTree.toList({
           filename: `${__dirname}/example/webpack/${name}.js`,
-          root: this._root,
+          directory: this._root,
           webpackConfig: this._webpackConfig
         });
 
@@ -475,7 +513,7 @@ describe('dependencyTree', function() {
     it('resolves aliased modules', function() {
       const tree = dependencyTree({
         filename: 'root/a.js',
-        root: 'root',
+        directory: 'root',
         config: 'root/require.config.js'
       });
 
@@ -487,13 +525,33 @@ describe('dependencyTree', function() {
     it('resolves non-aliased paths', function() {
       const tree = dependencyTree({
         filename: 'root/b.js',
-        root: 'root',
+        directory: 'root',
         config: 'root/require.config.js'
       });
 
       const filename = path.resolve(process.cwd(), 'root/b.js');
       const aliasedFile = path.resolve(process.cwd(), 'root/lodizzle.js');
       assert.ok('root/lodizzle.js' in tree[filename]);
+    });
+  });
+
+  describe('when a filter function is supplied', function() {
+    it('uses the filter to determine if a file should be included in the results', function() {
+      const directory = __dirname + '/example/onlyRealDeps';
+      const filename = directory + '/a.js';
+
+      const tree = dependencyTree({
+        filename,
+        directory,
+        // Skip all 3rd party deps
+        filter: (path) => path.indexOf('node_modules') === -1
+      });
+
+      const subTree = tree[filename];
+      assert.ok(Object.keys(tree).length);
+
+      const has3rdPartyDep = Object.keys(subTree).some(dep => dep === require.resolve('debug'));
+      assert.ok(!has3rdPartyDep);
     });
   });
 });
