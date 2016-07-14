@@ -1,8 +1,10 @@
-import dependencyTree from '../';
 import assert from 'assert';
 import sinon from 'sinon';
 import mockfs from 'mock-fs';
 import path from 'path';
+
+import rewire from 'rewire';
+const dependencyTree = rewire('../');
 
 describe('dependencyTree', function() {
   function testTreesForFormat(format, ext = '.js') {
@@ -204,6 +206,11 @@ describe('dependencyTree', function() {
   describe('throws', function() {
     beforeEach(function() {
       this._directory = __dirname + '/example/commonjs';
+      this._revert = dependencyTree.__set__('traverse', () => []);
+    });
+
+    afterEach(function() {
+      this._revert();
     });
 
     it('throws if the filename is missing', function() {
