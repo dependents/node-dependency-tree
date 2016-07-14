@@ -52,11 +52,6 @@ module.exports = function(options) {
     return config.isListForm ? [] : {};
   }
 
-  if (config.visited[config.filename]) {
-    debug('already visited: ' + config.filename);
-    return config.visited[config.filename];
-  }
-
   var results = traverse(config);
   debug('traversal complete', results);
 
@@ -135,30 +130,28 @@ function traverse(config) {
 
   debug('extracted ' + dependencies.length + ' dependencies: ', dependencies);
 
-  if (dependencies.length) {
-    dependencies = dependencies.map(function(dep) {
-      var result = cabinet({
-        partial: dep,
-        filename: config.filename,
-        directory: config.directory,
-        config: config.requireConfig,
-        webpackConfig: config.webpackConfig
-      });
-
-      debug('cabinet result ' + result);
-
-      return result;
-    })
-    .filter(function(dep) {
-      var exists = fs.existsSync(dep);
-
-      if (!exists) {
-        debug('filtering non-existent: ' + dep);
-      }
-
-      return exists;
+  dependencies = dependencies.map(function(dep) {
+    var result = cabinet({
+      partial: dep,
+      filename: config.filename,
+      directory: config.directory,
+      config: config.requireConfig,
+      webpackConfig: config.webpackConfig
     });
-  }
+
+    debug('cabinet result ' + result);
+
+    return result;
+  })
+  .filter(function(dep) {
+    var exists = fs.existsSync(dep);
+
+    if (!exists) {
+      debug('filtering non-existent: ' + dep);
+    }
+
+    return exists;
+  });
 
   // Prevents cycles by eagerly marking the current file as read
   // so that any dependent dependencies exit
