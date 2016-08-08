@@ -4,7 +4,10 @@
   "description": "Get the dependency tree of a module (as a list)",
   "main": "index.js",
   "scripts": {
-    "test": "jscs index.js test/test.js && ./node_modules/.bin/mocha --compilers js:babel/register test/test.js"
+    "test": "npm run lint && npm run tests",
+    "lint": "jscs index.js test/test.js",
+    "tests": "mocha --compilers js:babel/register test/test.js",
+    "watch-tests": "DEBUG=*,-mocha:*,-parse:*,-babel mocha --watch --compilers js:babel/register test/test.js"
   },
   "bin": {
     "dependency-tree": "bin/cli.js"
@@ -31,15 +34,19 @@
   "homepage": "https://github.com/mrjoelkemp/node-dependency-tree",
   "dependencies": {
     "commander": "^2.6.0",
-    "debug": "~2.2.0",
-    "filing-cabinet": "~1.2.11",
-    "precinct": "^3.0.0"
+    "debug": "^2.2.0",
+    "file-exists": "~1.0.0",
+    "filing-cabinet": "^1.3.0",
+    "glob-all": "~3.0.3",
+    "is-directory": "~0.3.1",
+    "precinct": "^3.1.1"
   },
   "devDependencies": {
+    "array-includes": "~3.0.2",
     "babel": "~5.8.38",
     "jscs": "~2.11.0",
     "jscs-preset-mrjoelkemp": "~1.0.0",
-    "mocha": "~2.0.1",
+    "mocha": "~2.5.3",
     "mock-fs": "~3.9.0",
     "rewire": "~2.5.2",
     "sinon": "~1.12.2"
