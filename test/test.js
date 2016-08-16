@@ -470,7 +470,8 @@ describe('dependencyTree', function() {
         const results = dependencyTree.toList({
           filename: `${__dirname}/example/webpack/${name}.js`,
           directory: this._root,
-          webpackConfig: this._webpackConfig
+          webpackConfig: this._webpackConfig,
+          filter: filename => filename.indexOf('filing-cabinet') !== -1
         });
 
         assert.ok(results.some(filename => filename.indexOf('node_modules/filing-cabinet') !== -1));
@@ -478,10 +479,12 @@ describe('dependencyTree', function() {
     });
 
     it('resolves aliased modules', function() {
+      this.timeout(5000);
       this._testResolution('aliased');
     });
 
     it('resolves unaliased modules', function() {
+      this.timeout(5000);
       this._testResolution('unaliased');
     });
   });
