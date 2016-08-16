@@ -97,18 +97,26 @@ module.exports.toList = function(options) {
  * Protected for testing
  *
  * @param  {String} filename
- * @return {String[]}
+ * @return {Object}
  */
 module.exports._getDependencies = function(filename) {
+  var data = {
+    dependencies: [],
+    ast: null,
+  };
+
   try {
-    return precinct.paperwork(filename, {
+    data.dependencies = precinct.paperwork(filename, {
       includeCore: false
     });
+
+    data.ast = precinct.ast;
+    return data;
 
   } catch (e) {
     debug('error getting dependencies: ' + e.message);
     debug(e.stack);
-    return [];
+    return data;
   }
 };
 
@@ -126,7 +134,8 @@ function traverse(config) {
     return config.visited[config.filename];
   }
 
-  var dependencies = module.exports._getDependencies(config.filename);
+  var data = module.exports._getDependencies(config.filename);
+  var dependencies = data.dependencies;
 
   debug('extracted ' + dependencies.length + ' dependencies: ', dependencies);
 
@@ -135,6 +144,7 @@ function traverse(config) {
       partial: dep,
       filename: config.filename,
       directory: config.directory,
+      ast: data.ast,
       config: config.requireConfig,
       webpackConfig: config.webpackConfig
     });
@@ -153,12 +163,16 @@ function traverse(config) {
     return exists;
   });
 
+  debug('cabinet-resolved all dependencies: ', dependencies);
   // Prevents cycles by eagerly marking the current file as read
   // so that any dependent dependencies exit
   config.visited[config.filename] = config.isListForm ? [] : {};
 
   if (config.filter) {
+    debug('using filter function to filter out dependencies');
+    debug('unfiltered number of dependencies: ' + dependencies.length);
     dependencies = dependencies.filter(config.filter);
+    debug('filtered number of dependencies: ' + dependencies.length);
   }
 
   dependencies.forEach(function(d) {

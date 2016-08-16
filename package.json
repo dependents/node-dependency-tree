@@ -32,15 +32,15 @@
   "dependencies": {
     "commander": "^2.6.0",
     "debug": "~2.2.0",
-    "filing-cabinet": "~1.2.11",
-    "precinct": "^3.0.0"
+    "filing-cabinet": "~1.4.0",
+    "precinct": "^3.1.1"
   },
   "devDependencies": {
     "babel": "~5.8.38",
     "jscs": "~2.11.0",
     "jscs-preset-mrjoelkemp": "~1.0.0",
     "mocha": "~2.0.1",
-    "mock-fs": "~3.9.0",
+    "mock-fs": "~3.11.0",
     "rewire": "~2.5.2",
     "sinon": "~1.12.2"
   }
