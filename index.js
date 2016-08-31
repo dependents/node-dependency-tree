@@ -96,28 +96,52 @@ module.exports.toList = function(options) {
  *
  * Protected for testing
  *
- * @param  {String} filename
- * @return {Object}
+ * @param  {Config} config
+ * @return {Array}
  */
-module.exports._getDependencies = function(filename) {
-  var data = {
-    dependencies: [],
-    ast: null,
-  };
+module.exports._getDependencies = function(config) {
+  var dependencies;
 
   try {
-    data.dependencies = precinct.paperwork(filename, {
+    dependencies = precinct.paperwork(config.filename, {
       includeCore: false
     });
 
-    data.ast = precinct.ast;
-    return data;
+    debug('extracted ' + dependencies.length + ' dependencies: ', dependencies);
 
   } catch (e) {
     debug('error getting dependencies: ' + e.message);
     debug(e.stack);
-    return data;
+    return [];
   }
+
+  var resolvedDependencies = [];
+
+  for (var i = 0, l = dependencies.length; i < l; i++) {
+    var dep = dependencies[i];
+
+    var result = cabinet({
+      partial: dep,
+      filename: config.filename,
+      directory: config.directory,
+      ast: precinct.ast,
+      config: config.requireConfig,
+      webpackConfig: config.webpackConfig
+    });
+
+    debug('cabinet result ' + result);
+
+    var exists = fs.existsSync(result);
+
+    if (!exists) {
+      debug('filtering non-existent: ' + result);
+      continue;
+    }
+
+    resolvedDependencies.push(result);
+  }
+
+  return resolvedDependencies;
 };
 
 /**
@@ -134,34 +158,7 @@ function traverse(config) {
     return config.visited[config.filename];
   }
 
-  var data = module.exports._getDependencies(config.filename);
-  var dependencies = data.dependencies;
-
-  debug('extracted ' + dependencies.length + ' dependencies: ', dependencies);
-
-  dependencies = dependencies.map(function(dep) {
-    var result = cabinet({
-      partial: dep,
-      filename: config.filename,
-      directory: config.directory,
-      ast: data.ast,
-      config: config.requireConfig,
-      webpackConfig: config.webpackConfig
-    });
-
-    debug('cabinet result ' + result);
-
-    return result;
-  })
-  .filter(function(dep) {
-    var exists = fs.existsSync(dep);
-
-    if (!exists) {
-      debug('filtering non-existent: ' + dep);
-    }
-
-    return exists;
-  });
+  var dependencies = module.exports._getDependencies(config);
 
   debug('cabinet-resolved all dependencies: ', dependencies);
   // Prevents cycles by eagerly marking the current file as read
@@ -175,7 +172,8 @@ function traverse(config) {
     debug('filtered number of dependencies: ' + dependencies.length);
   }
 
-  dependencies.forEach(function(d) {
+  for (var i = 0, l = dependencies.length; i < l; i++) {
+    var d = dependencies[i];
     var localConfig = config.clone();
     localConfig.filename = d;
 
@@ -184,7 +182,7 @@ function traverse(config) {
     } else {
       subTree[d] = traverse(localConfig);
     }
-  });
+  }
 
   if (config.isListForm) {
     // Prevents redundancy about each memoized step
