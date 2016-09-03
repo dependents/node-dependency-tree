@@ -61,6 +61,7 @@ describe('dependencyTree', function() {
         'b.js': 'export default function() {};',
         'c.js': 'export default function() {};',
         'jsx.js': `import c from './c';\n export default <jsx />;`,
+        'foo.jsx': `import React from 'react';\n import b from 'b';\n export default <jsx />;`,
         'es7.js': `import c from './c';\n export default async function foo() {};`
       }
     });
@@ -347,6 +348,16 @@ describe('dependencyTree', function() {
         });
 
         assert.ok(tree[`${this._directory}/c.js`]);
+      });
+
+      it('resolves files with a jsx extension', function() {
+        const filename = `${this._directory}/foo.jsx`;
+        const {[filename]: tree} = dependencyTree({
+          filename,
+          directory: this._directory
+        });
+
+        assert.ok(tree[`${this._directory}/b.js`]);
       });
 
       it('resolves files that have es7', function() {
