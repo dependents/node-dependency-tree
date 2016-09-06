@@ -57,6 +57,8 @@ module.exports = function(options) {
   var results = traverse(config);
   debug('traversal complete', results);
 
+  config.nonExistent = removeDups(config.nonExistent);
+
   var tree;
   if (config.isListForm) {
     debug('list form of results requested');
@@ -133,7 +135,7 @@ module.exports._getDependencies = function(config) {
 
     debug('cabinet result ' + result);
 
-    if (!result && !config.nonExistent[dep]) {
+    if (!result) {
       config.nonExistent.push(dep);
     }
 
@@ -199,8 +201,6 @@ function traverse(config) {
   } else {
     config.visited[config.filename] = subTree;
   }
-
-  config.nonExistent = removeDups(config.nonExistent);
 
   return subTree;
 }
