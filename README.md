@@ -15,22 +15,35 @@ var tree = dependencyTree({
   directory: 'path/to/all/files',
   requireConfig: 'path/to/requirejs/config', // optional
   webpackConfig: 'path/to/webpack/config', // optional
-  filter: path => path.indexOf('node_modules') === -1 // optional
+  filter: path => path.indexOf('node_modules') === -1, // optional
+  nonExistent: [] // optional
 });
 
 // Returns a post-order traversal (list form) of the tree with duplicate sub-trees pruned.
 // This is useful for bundling source files, because the list gives the concatenation order.
+// Note: you can pass the same arguments as you would to dependencyTree()
 var list = dependencyTree.toList({
   filename: 'path/to/a/file',
   directory: 'path/to/all/files'
 });
 ```
 
-* Works for JS (AMD, CommonJS, ES6 modules) and CSS preprocessors (Sass, Stylus); basically, any filetype supported by [Precinct](https://github.com/mrjoelkemp/node-precinct).
+* Works for JS (AMD, CommonJS, ES6 modules) and CSS preprocessors (Sass, Stylus); basically, any module type supported by [Precinct](https://github.com/mrjoelkemp/node-precinct).
   - For CommonJS modules, 3rd party dependencies (npm installed dependencies) are included in the tree by default
   - Dependency path resolutions are handled by [filing-cabinet](https://github.com/mrjoelkemp/node-filing-cabinet)
   - Supports RequireJS and Webpack loaders
 * All core Node modules (assert, path, fs, etc) are removed from the dependency list by default
+
+**Optional**
+
+* `requireConfig`: path to a requirejs config for AMD modules (allows for the result of aliased module paths)
+* `webpackConfig`: path to a webpack config for aliased modules
+* `visited`: object used for avoiding redundant subtree generations via memoization.
+* `nonExistent`: array used for storing the list of partial paths that do not exist
+* `filter`: a function used to determine if a module (and its subtree) should be included in the dependency tree
+ - The function should accept an absolute filepath and return a boolean
+ - If the filter returns true, the module is included in the resulting tree
+
 
 The object form is a mapping of the dependency tree to the filesystem –
 where every key is an absolute filepath and the value is another object/subtree.
@@ -54,15 +67,6 @@ Example:
 
 This structure was chosen to serve as a visual representation of the dependency tree
 for use in the [Dependents](https://github.com/mrjoelkemp/sublime-dependents) plugin.
-
-**Optional**
-
-* `requireConfig`: path to a requirejs config for AMD modules (allows for the result of aliased module paths)
-* `webpackConfig`: path to a webpack config for aliased modules
-* `visited`: object used for avoiding redundant subtree generations via memoization.
-* `filter`: a function used to determine if a module (and its subtree) should be included in the dependency tree
- - The function should accept an absolute filepath and return a boolean
- - If the filter returns true, the module is included in the resulting tree
 
 **Shell version** (assuming `npm install -g dependency-tree`):
 
