@@ -133,6 +133,23 @@ describe('dependencyTree', function() {
     assert.ok(!Object.keys(subTree).some(dep => dep.indexOf('notReal') !== -1));
   });
 
+  it('accepts a nonExistent list for storing partials that do not resolve to a valid file', function() {
+    mockfs({
+      [__dirname + '/onlyRealDeps']: {
+        'a.js': 'var notReal = require("./notReal");'
+      }
+    });
+
+    const directory = __dirname + '/onlyRealDeps';
+    const filename = directory + '/a.js';
+    const nonExistent = [];
+
+    const tree = dependencyTree({filename, directory, nonExistent});
+
+    assert.equal(nonExistent.length, 1);
+    assert.equal(nonExistent[0], './notReal');
+  });
+
   it('does not choke on cyclic dependencies', function() {
     mockfs({
       [__dirname + '/cyclic']: {
