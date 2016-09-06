@@ -8,6 +8,7 @@ function Config(options) {
   this.filename = options.filename;
   this.directory = options.directory || options.root;
   this.visited = options.visited || {};
+  this.nonExistent = options.nonExistent || [];
   this.isListForm = options.isListForm;
   this.requireConfig = options.config || options.requireConfig;
   this.webpackConfig = options.webpackConfig;
@@ -41,6 +42,7 @@ Config.prototype.clone = function() {
  * @param {String} [options.webpackConfig] - The path to a webpack config
  * @param {Object} [options.visited] - Cache of visited, absolutely pathed files that should not be reprocessed.
  *                             Format is a filename -> tree as list lookup table
+ * @param {Array} [options.nonExistent] - List of partials that do not exist
  * @param {Boolean} [options.isListForm=false]
  * @return {Object}
  */
@@ -54,6 +56,8 @@ module.exports = function(options) {
 
   var results = traverse(config);
   debug('traversal complete', results);
+
+  config.nonExistent = removeDups(config.nonExistent);
 
   var tree;
   if (config.isListForm) {
@@ -130,6 +134,10 @@ module.exports._getDependencies = function(config) {
     });
 
     debug('cabinet result ' + result);
+
+    if (!result) {
+      config.nonExistent.push(dep);
+    }
 
     var exists = fs.existsSync(result);
 

@@ -60,6 +60,7 @@ for use in the [Dependents](https://github.com/mrjoelkemp/sublime-dependents) pl
 * `requireConfig`: path to a requirejs config for AMD modules (allows for the result of aliased module paths)
 * `webpackConfig`: path to a webpack config for aliased modules
 * `visited`: object used for avoiding redundant subtree generations via memoization.
+* `nonExistent`: array used for storing the list of partial paths that do not exist
 * `filter`: a function used to determine if a module (and its subtree) should be included in the dependency tree
  - The function should accept an absolute filepath and return a boolean
  - If the filter returns true, the module is included in the resulting tree
