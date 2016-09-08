@@ -134,40 +134,6 @@ describe('dependencyTree', function() {
     assert.ok(!Object.keys(subTree).some(dep => dep.indexOf('notReal') !== -1));
   });
 
-  it('accepts a nonExistent list for storing partials that do not resolve to a valid file (with invalid partials)', function() {
-    mockfs({
-      [__dirname + '/onlyRealDeps']: {
-        'a.js': 'var notReal = require("./notReal");'
-      }
-    });
-
-    const directory = __dirname + '/onlyRealDeps';
-    const filename = directory + '/a.js';
-    const nonExistent = [];
-
-    const tree = dependencyTree({filename, directory, nonExistent});
-
-    assert.equal(nonExistent.length, 1);
-    assert.equal(nonExistent[0], './notReal');
-  });
-
-  it('accepts a nonExistent list for storing partials that do not resolve to a valid file (with valid partials)', function() {
-    mockfs({
-      [__dirname + '/onlyRealDeps']: {
-        'a.js': 'var b = require("./b");',
-        'b.js': 'export default 1;'
-      }
-    });
-
-    const directory = __dirname + '/onlyRealDeps';
-    const filename = directory + '/a.js';
-    const nonExistent = [];
-
-    const tree = dependencyTree({filename, directory, nonExistent});
-
-    assert.equal(nonExistent.length, 0);
-  });
-
   it('does not choke on cyclic dependencies', function() {
     mockfs({
       [__dirname + '/cyclic']: {
@@ -236,6 +202,88 @@ describe('dependencyTree', function() {
     });
 
     assert(tree.length === 3);
+  });
+
+  describe('when given a list to store non existent partials', function() {
+    describe('and the file contains no valid partials', function() {
+      it('stores the invalid partials', function() {
+        mockfs({
+          [__dirname + '/onlyRealDeps']: {
+            'a.js': 'var notReal = require("./notReal");'
+          }
+        });
+
+        const directory = __dirname + '/onlyRealDeps';
+        const filename = directory + '/a.js';
+        const nonExistent = [];
+
+        const tree = dependencyTree({filename, directory, nonExistent});
+
+        assert.equal(nonExistent.length, 1);
+        assert.equal(nonExistent[0], './notReal');
+      });
+    });
+
+    describe('and the file contains all valid partials', function() {
+      it('does not store anything', function() {
+        mockfs({
+          [__dirname + '/onlyRealDeps']: {
+            'a.js': 'var b = require("./b");',
+            'b.js': 'export default 1;'
+          }
+        });
+
+        const directory = __dirname + '/onlyRealDeps';
+        const filename = directory + '/a.js';
+        const nonExistent = [];
+
+        const tree = dependencyTree({filename, directory, nonExistent});
+
+        assert.equal(nonExistent.length, 0);
+      });
+    });
+
+    describe('and the file contains a mix of invalid and valid partials', function() {
+      it('stores the invalid ones', function() {
+        mockfs({
+          [__dirname + '/onlyRealDeps']: {
+            'a.js': 'var b = require("./b");',
+            'b.js': 'var c = require("./c"); export default 1;',
+            'c.js': 'var crap = require("./notRealMan");'
+          }
+        });
+
+        const directory = __dirname + '/onlyRealDeps';
+        const filename = directory + '/a.js';
+        const nonExistent = [];
+
+        const tree = dependencyTree({filename, directory, nonExistent});
+
+        assert.equal(nonExistent.length, 1);
+        assert.equal(nonExistent[0], './notRealMan');
+      });
+    });
+
+    describe('and there is more than one reference to the invalid partial', function() {
+      it('only includes the non-existent partial once', function() {
+        mockfs({
+          [__dirname + '/onlyRealDeps']: {
+            'a.js': 'var b = require("./b");\nvar crap = require("./notRealMan");',
+            'b.js': 'var c = require("./c"); export default 1;',
+            'c.js': 'var crap = require("./notRealMan");'
+          }
+        });
+
+        const directory = __dirname + '/onlyRealDeps';
+        const filename = directory + '/a.js';
+        const nonExistent = [];
+
+        const tree = dependencyTree({filename, directory, nonExistent});
+
+        assert.equal(nonExistent.length, 1);
+        assert.equal(nonExistent[0], './notRealMan');
+      });
+    });
   });
 
   describe('throws', function() {

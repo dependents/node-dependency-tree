@@ -57,7 +57,8 @@ module.exports = function(options) {
   var results = traverse(config);
   debug('traversal complete', results);
 
-  config.nonExistent = removeDups(config.nonExistent);
+  dedupeNonExistent(config.nonExistent);
+  debug('deduped list of nonExistent partials: ', config.nonExistent);
 
   var tree;
   if (config.isListForm) {
@@ -224,4 +225,14 @@ function removeDups(list) {
   });
 
   return unique;
+}
+
+// Mutate the list input to do a dereferenced modification of the user-supplied list
+function dedupeNonExistent(nonExistent) {
+  var deduped = removeDups(nonExistent);
+  nonExistent.length = deduped.length;
+
+  for (var i = 0, l = deduped.length; i < l; i++) {
+    nonExistent[i] = deduped[i];
+  }
 }
