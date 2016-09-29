@@ -43,7 +43,8 @@ var list = dependencyTree.toList({
 * `filter`: a function used to determine if a module (and its subtree) should be included in the dependency tree
  - The function should accept an absolute filepath and return a boolean
  - If the filter returns true, the module is included in the resulting tree
-
+* `detective`: object with configuration specific to detectives used to find dependencies of a file
+ - for example `detective.amd.skipLazyLoaded: true` tells the AMD detective to omit inner requires
 
 The object form is a mapping of the dependency tree to the filesystem –
 where every key is an absolute filepath and the value is another object/subtree.
