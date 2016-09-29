@@ -12,6 +12,7 @@ function Config(options) {
   this.isListForm = options.isListForm;
   this.requireConfig = options.config || options.requireConfig;
   this.webpackConfig = options.webpackConfig;
+  this.detectiveConfig = options.detective || {};
 
   this.filter = options.filter;
 
@@ -106,11 +107,11 @@ module.exports.toList = function(options) {
  */
 module.exports._getDependencies = function(config) {
   var dependencies;
+  var precinctOptions = config.detectiveConfig;
+  precinctOptions.includeCore = false;
 
   try {
-    dependencies = precinct.paperwork(config.filename, {
-      includeCore: false
-    });
+    dependencies = precinct.paperwork(config.filename, precinctOptions);
 
     debug('extracted ' + dependencies.length + ' dependencies: ', dependencies);
 

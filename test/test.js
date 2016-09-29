@@ -2,7 +2,7 @@ import assert from 'assert';
 import sinon from 'sinon';
 import mockfs from 'mock-fs';
 import path from 'path';
-
+import precinct from 'precinct';
 import rewire from 'rewire';
 const dependencyTree = rewire('../');
 
@@ -202,6 +202,28 @@ describe('dependencyTree', function() {
     });
 
     assert(tree.length === 3);
+  });
+
+  describe('when given a detective configuration', function() {
+    it('passes it through to precinct', function() {
+      const spy = sinon.spy(precinct, 'paperwork');
+      const directory = __dirname + '/example/onlyRealDeps';
+      const filename = directory + '/a.js';
+      const detectiveConfig = {
+        amd: {
+          skipLazyLoaded: true
+        }
+      };
+
+      dependencyTree({
+        filename,
+        directory,
+        detective: detectiveConfig
+      });
+
+      assert.ok(spy.calledWith(filename, detectiveConfig));
+      spy.restore();
+    });
   });
 
   describe('when given a list to store non existent partials', function() {
