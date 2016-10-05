@@ -79,3 +79,9 @@ dependency-tree --directory=path/to/all/supported/files [--list-form] [-c path/t
 Prints the dependency tree of the given filename as stringified json (by default).
 
 * You can alternatively print out the list form one element per line using the `--list-form` option.
+
+### FAQ
+
+#### Why aren't some some dependencies being detected?
+
+If there are bugs in [precinct](https://github.com/dependents/node-precinct) or if the `requireConfig`/`webpackConfig` options are incomplete, some dependencies may not be resolved. The optional array passed to the `nonExistent` option will be populated with paths that could not be resolved. You can check whether this array to see where problems might exist. You can also set `DEBUG=*` in your environment to see why a path could not be resolved.
