@@ -34,7 +34,7 @@ var list = dependencyTree.toList({
   - Supports RequireJS and Webpack loaders
 * All core Node modules (assert, path, fs, etc) are removed from the dependency list by default
 
-**Optional**
+#### Options
 
 * `requireConfig`: path to a requirejs config for AMD modules (allows for the result of aliased module paths)
 * `webpackConfig`: path to a webpack config for aliased modules
@@ -46,6 +46,8 @@ var list = dependencyTree.toList({
 * `detective`: object with configuration specific to detectives used to find dependencies of a file
  - for example `detective.amd.skipLazyLoaded: true` tells the AMD detective to omit inner requires
  - See [precinct's usage docs](https://github.com/dependents/node-precinct#usage) for the list of module types you can pass options to.
+
+#### Format Details
 
 The object form is a mapping of the dependency tree to the filesystem –
 where every key is an absolute filepath and the value is another object/subtree.
@@ -70,7 +72,9 @@ Example:
 This structure was chosen to serve as a visual representation of the dependency tree
 for use in the [Dependents](https://github.com/mrjoelkemp/sublime-dependents) plugin.
 
-**Shell version** (assuming `npm install -g dependency-tree`):
+##### CLI version
+
+* Assumes a global install: `npm install -g dependency-tree`
 
 ```
 dependency-tree --directory=path/to/all/supported/files [--list-form] [-c path/to/require/config] [-w path/to/webpack/config] filename
@@ -79,3 +83,14 @@ dependency-tree --directory=path/to/all/supported/files [--list-form] [-c path/t
 Prints the dependency tree of the given filename as stringified json (by default).
 
 * You can alternatively print out the list form one element per line using the `--list-form` option.
+
+### FAQ
+
+#### Why aren't some some dependencies being detected?
+
+If there are bugs in [precinct](https://github.com/dependents/node-precinct) or if the `requireConfig`/`webpackConfig` options are incomplete,
+some dependencies may not be resolved. The optional array passed to the `nonExistent` option will be populated with paths
+that could not be resolved. You can check this array to see where problems might exist.
+
+You can also use the `DEBUG=*` env variable along with the cli version to see debugging information explaining where resolution went wrong.
+Example: `DEBUG=* dependency-tree -w path/to/webpack.config.json path/to/a/file`
