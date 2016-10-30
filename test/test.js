@@ -679,4 +679,91 @@ describe('dependencyTree', function() {
       assert.ok(!has3rdPartyDep);
     });
   });
+
+  describe('when given a CJS file with lazy requires', function() {
+    beforeEach(function() {
+      mockfs({
+        [__dirname + '/cjs']: {
+          'foo.js': 'module.exports = function(bar = require("./bar")) {};',
+          'bar.js': 'module.exports = 1;'
+        }
+      });
+    });
+
+    it('includes the lazy dependency', function() {
+      const directory = __dirname + '/cjs';
+      const filename = directory + '/foo.js';
+
+      const tree = dependencyTree({filename, directory});
+      const subTree = tree[filename];
+
+      assert.ok(`${directory}/bar.js` in subTree);
+    });
+  });
+
+  describe('when given an es6 file using CJS lazy requires', function() {
+    beforeEach(function() {
+      mockfs({
+        [__dirname + '/es6']: {
+          'foo.js': 'export default function(bar = require("./bar")) {};',
+          'bar.js': 'export default 1;'
+        }
+      });
+    });
+
+    describe('and mixedImport mode is turned on', function() {
+      it('includes the lazy dependency', function() {
+        const directory = __dirname + '/es6';
+        const filename = directory + '/foo.js';
+
+        const tree = dependencyTree({
+          filename,
+          directory,
+          detective: {
+            es6: {
+              mixedImports: true
+            }
+          }
+        });
+
+        const subTree = tree[filename];
+
+        assert.ok(`${directory}/bar.js` in subTree);
+      });
+
+      it('also works for toList', function() {
+        const directory = __dirname + '/es6';
+        const filename = directory + '/foo.js';
+
+        const results = dependencyTree.toList({
+          filename,
+          directory,
+          detective: {
+            es6: {
+              mixedImports: true
+            }
+          }
+        });
+
+        assert.equal(results[0], `${directory}/bar.js`);
+        assert.equal(results[1], filename);
+      });
+    });
+
+    describe('and mixedImport mode is turned off', function() {
+      it('does not include the lazy dependency', function() {
+        const directory = __dirname + '/es6';
+        const filename = directory + '/foo.js';
+
+        const tree = dependencyTree({
+          filename,
+          directory
+        });
+
+        const subTree = tree[filename];
+
+        assert.ok(!(`${directory}/bar.js` in subTree));
+      });
+    });
+  });
 });

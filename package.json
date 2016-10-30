@@ -16,6 +16,7 @@
   "keywords": [
     "dependency",
     "tree",
+    "graph",
     "module",
     "requirejs",
     "AMD",
@@ -33,7 +34,7 @@
     "commander": "~2.6.0",
     "debug": "~2.2.0",
     "filing-cabinet": "^1.5.0",
-    "precinct": "^3.3.0"
+    "precinct": "^3.5.0"
   },
   "devDependencies": {
     "babel": "~5.8.38",
