@@ -12,7 +12,7 @@ function Config(options) {
   this.isListForm = options.isListForm;
   this.requireConfig = options.config || options.requireConfig;
   this.webpackConfig = options.webpackConfig;
-  this.detectiveConfig = options.detective || {};
+  this.detectiveConfig = options.detective || options.detectiveConfig || {};
 
   this.filter = options.filter;
 
@@ -109,6 +109,10 @@ module.exports._getDependencies = function(config) {
   var dependencies;
   var precinctOptions = config.detectiveConfig;
   precinctOptions.includeCore = false;
+
+  // TODO: Avoid introducing language knowledge here
+  precinctOptions.sass = precinctOptions.sass || {};
+  precinctOptions.sass.syntax = path.extname(config.filename).replace('.', '');
 
   try {
     dependencies = precinct.paperwork(config.filename, precinctOptions);
