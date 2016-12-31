@@ -110,10 +110,6 @@ module.exports._getDependencies = function(config) {
   var precinctOptions = config.detectiveConfig;
   precinctOptions.includeCore = false;
 
-  // TODO: Avoid introducing language knowledge here
-  precinctOptions.sass = precinctOptions.sass || {};
-  precinctOptions.sass.syntax = path.extname(config.filename).replace('.', '');
-
   try {
     dependencies = precinct.paperwork(config.filename, precinctOptions);
 
