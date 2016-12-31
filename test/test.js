@@ -4,6 +4,8 @@ import mockfs from 'mock-fs';
 import path from 'path';
 import precinct from 'precinct';
 import rewire from 'rewire';
+import Config from '../lib/Config';
+
 const dependencyTree = rewire('../');
 
 describe('dependencyTree', function() {
@@ -763,6 +765,30 @@ describe('dependencyTree', function() {
         const subTree = tree[filename];
 
         assert.ok(!(`${directory}/bar.js` in subTree));
+      });
+    });
+  });
+
+  describe('Config', function() {
+    describe('when cloning', function() {
+      describe('and a detective config was set', function() {
+        it('retains the detective config in the clone', function() {
+          const detectiveConfig = {
+            es6: {
+              mixedImports: true
+            }
+          };
+
+          const config = new Config({
+            detectiveConfig,
+            filename: 'foo',
+            directory: 'bar'
+          });
+
+          const clone = config.clone();
+
+          assert.deepEqual(clone.detectiveConfig, detectiveConfig);
+        });
       });
     });
   });
