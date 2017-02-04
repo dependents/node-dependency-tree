@@ -671,7 +671,11 @@ describe('dependencyTree', function() {
         filename,
         directory,
         // Skip all 3rd party deps
-        filter: (path) => path.indexOf('node_modules') === -1
+        filter: (filePath, moduleFile) => {
+          assert.ok(filePath.match('node_modules/debug/node.js'));
+          assert.ok(moduleFile.match('test/example/onlyRealDeps/a.js'));
+          return filePath.indexOf('node_modules') === -1;
+        }
       });
 
       const subTree = tree[filename];

@@ -152,7 +152,9 @@ function traverse(config) {
   if (config.filter) {
     debug('using filter function to filter out dependencies');
     debug('unfiltered number of dependencies: ' + dependencies.length);
-    dependencies = dependencies.filter(config.filter);
+    dependencies = dependencies.filter(function(filePath) {
+      return config.filter(filePath, config.filename);
+    });
     debug('filtered number of dependencies: ' + dependencies.length);
   }
 
