@@ -53,6 +53,19 @@ describe('dependencyTree', function() {
     });
   }
 
+  function mockLess() {
+    mockfs({
+      [__dirname + '/example/less']: {
+        'a.less': `
+          @import "b.css";
+          @import "c.less";
+        `,
+        'b.css': 'body { color: blue; }',
+        'c.less': 'body { color: pink; }'
+      }
+    });
+  }
+
   function mockes6() {
     mockfs({
       [__dirname + '/example/es6']: {
@@ -573,6 +586,15 @@ describe('dependencyTree', function() {
 
         testToList('stylus', '.styl');
       });
+
+      describe('less', function() {
+        beforeEach(function() {
+          mockLess();
+        });
+
+        testToList('less', '.less');
+      });
+
     });
   });
 

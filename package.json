@@ -24,7 +24,8 @@
     "commonjs",
     "es6",
     "sass",
-    "stylus"
+    "stylus",
+    "less"
   ],
   "author": "Joel Kemp <joel@mrjoelkemp.com>",
   "license": "MIT",
@@ -35,8 +36,8 @@
   "dependencies": {
     "commander": "~2.6.0",
     "debug": "~2.2.0",
-    "filing-cabinet": "^1.6.1",
-    "precinct": "^3.5.2"
+    "filing-cabinet": "^1.7.0",
+    "precinct": "^3.6.0"
   },
   "devDependencies": {
     "babel": "~5.8.38",
