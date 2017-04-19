@@ -36,7 +36,7 @@
   "dependencies": {
     "commander": "~2.6.0",
     "debug": "~2.2.0",
-    "filing-cabinet": "^1.7.0",
+    "filing-cabinet": "^1.8.0",
     "precinct": "^3.6.0"
   },
   "devDependencies": {
