@@ -82,6 +82,19 @@ describe('dependencyTree', function() {
     });
   }
 
+  function mockTS() {
+    mockfs({
+      [__dirname + '/example/ts']: {
+        'a.ts': `
+          import b from './b';
+          import c from './c';
+        `,
+        'b.ts': 'export default function() {};',
+        'c.ts': 'export default function() {};'
+      }
+    });
+  }
+
   afterEach(function() {
     mockfs.restore();
   });
@@ -505,6 +518,22 @@ describe('dependencyTree', function() {
 
       testTreesForFormat('stylus', '.styl');
     });
+
+    describe('less', function() {
+      beforeEach(function() {
+        mockLess();
+      });
+
+      testTreesForFormat('less', '.less');
+    });
+
+    describe('typescript', function() {
+      beforeEach(function() {
+        mockTS();
+      });
+
+      testTreesForFormat('ts', '.ts');
+    });
   });
 
   describe('toList', function() {
@@ -595,6 +624,13 @@ describe('dependencyTree', function() {
         testToList('less', '.less');
       });
 
+      describe('typescript', function() {
+        beforeEach(function() {
+          mockTS();
+        });
+
+        testToList('ts', '.ts');
+      });
     });
   });
 
