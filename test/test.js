@@ -694,7 +694,7 @@ describe('dependencyTree', function() {
         directory,
         // Skip all 3rd party deps
         filter: (filePath, moduleFile) => {
-          assert.ok(filePath.match('node_modules/debug/node.js'));
+          assert.ok(require.resolve('debug'));
           assert.ok(moduleFile.match('test/example/onlyRealDeps/a.js'));
           return filePath.indexOf('node_modules') === -1;
         }
