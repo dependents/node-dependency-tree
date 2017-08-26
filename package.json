@@ -1,6 +1,6 @@
 {
   "name": "dependency-tree",
-  "version": "5.9.1",
+  "version": "5.10.0",
   "description": "Get the dependency tree of a module",
   "main": "index.js",
   "scripts": {
