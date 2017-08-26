@@ -25,7 +25,8 @@
     "es6",
     "sass",
     "stylus",
-    "less"
+    "less",
+    "typescript"
   ],
   "author": "Joel Kemp <joel@mrjoelkemp.com>",
   "license": "MIT",
