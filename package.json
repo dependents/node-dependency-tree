@@ -38,7 +38,7 @@
     "commander": "^2.6.0",
     "debug": "^2.2.0",
     "filing-cabinet": "^1.9.0",
-    "precinct": "^3.7.0"
+    "precinct": "^3.8.0"
   },
   "devDependencies": {
     "babel": "~5.8.38",
