@@ -831,6 +831,31 @@ describe('dependencyTree', function() {
     });
   });
 
+  describe('when given an es6 file using dynamic imports', function() {
+    beforeEach(function() {
+      mockfs({
+        [__dirname + '/es6']: {
+          'foo.js': 'import("./bar");',
+          'bar.js': 'export default 1;'
+        }
+      });
+    });
+
+    it('includes the dynamic import', function() {
+      const directory = __dirname + '/es6';
+      const filename = directory + '/foo.js';
+
+      const tree = dependencyTree({
+        filename,
+        directory
+      });
+
+      const subTree = tree[filename];
+
+      assert.ok(!(`${directory}/bar.js` in subTree));
+    });
+  });
+
   describe('Config', function() {
     describe('when cloning', function() {
       describe('and a detective config was set', function() {
