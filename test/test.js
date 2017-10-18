@@ -9,6 +9,7 @@ import Config from '../lib/Config';
 const dependencyTree = rewire('../');
 
 describe('dependencyTree', function() {
+  this.timeout(4000);
   function testTreesForFormat(format, ext = '.js') {
     it('returns an object form of the dependency tree for a file', function() {
       const root = `${__dirname}/example/${format}`;
