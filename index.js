@@ -14,6 +14,7 @@ var Config = require('./lib/Config');
  * @param {String} options.directory - The directory containing all JS files
  * @param {String} [options.requireConfig] - The path to a requirejs config
  * @param {String} [options.webpackConfig] - The path to a webpack config
+ * @param {String} [options.nodeModulesConfig] - config for resolving entry file for node_modules
  * @param {Object} [options.visited] - Cache of visited, absolutely pathed files that should not be reprocessed.
  *                             Format is a filename -> tree as list lookup table
  * @param {Array} [options.nonExistent] - List of partials that do not exist
@@ -105,7 +106,8 @@ module.exports._getDependencies = function(config) {
       directory: config.directory,
       ast: precinct.ast,
       config: config.requireConfig,
-      webpackConfig: config.webpackConfig
+      webpackConfig: config.webpackConfig,
+      nodeModulesConfig: config.nodeModulesConfig
     });
 
     if (!result) {

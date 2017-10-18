@@ -21,6 +21,9 @@ var tree = dependencyTree({
   directory: 'path/to/all/files',
   requireConfig: 'path/to/requirejs/config', // optional
   webpackConfig: 'path/to/webpack/config', // optional
+  nodeModulesConfig: {
+    entry: 'module'
+  }, // optional
   filter: path => path.indexOf('node_modules') === -1, // optional
   nonExistent: [] // optional
 });
@@ -38,6 +41,7 @@ var list = dependencyTree.toList({
 
 * `requireConfig`: path to a requirejs config for AMD modules (allows for the result of aliased module paths)
 * `webpackConfig`: path to a webpack config for aliased modules
+* `nodeModulesConfig`: config for resolving entry file for node_modules
 * `visited`: object used for avoiding redundant subtree generations via memoization.
 * `nonExistent`: array used for storing the list of partial paths that do not exist
 * `filter`: a function used to determine if a module (and its subtree) should be included in the dependency tree
