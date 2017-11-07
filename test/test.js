@@ -9,6 +9,7 @@ import Config from '../lib/Config';
 const dependencyTree = rewire('../');
 
 describe('dependencyTree', function() {
+  this.timeout(8000);
   function testTreesForFormat(format, ext = '.js') {
     it('returns an object form of the dependency tree for a file', function() {
       const root = `${__dirname}/example/${format}`;
@@ -853,6 +854,39 @@ describe('dependencyTree', function() {
       const subTree = tree[filename];
 
       assert.ok(!(`${directory}/bar.js` in subTree));
+    });
+  });
+
+  describe('when given a CJS file with module property in package.json', function() {
+    beforeEach(function() {
+      mockfs({
+        [__dirname + '/es6']: {
+          ['module.entry.js']: 'import * as module from "module.entry"',
+          ['node_modules']: {
+            ['module.entry']: {
+              'index.main.js': 'module.exports = function() {};',
+              'index.module.js': 'module.exports = function() {};',
+              'package.json': '{ "main": "index.main.js", "module": "index.module.js" }'
+            }
+          }
+        }
+      });
+    });
+
+    it('it includes the module entry as dependency', function() {
+      const directory = __dirname + '/es6';
+      const filename = directory + '/module.entry.js';
+
+      const tree = dependencyTree({
+        filename,
+        directory,
+        nodeModulesConfig: {
+          entry: 'module'
+        }
+      });
+      const subTree = tree[filename];
+
+      assert.ok(`${directory}/node_modules/module.entry/index.module.js` in subTree);
     });
   });
 
