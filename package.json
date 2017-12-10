@@ -33,20 +33,26 @@
   "bugs": {
     "url": "https://github.com/mrjoelkemp/node-dependency-tree/issues"
   },
+  "engines": {
+    "node": ">=6.0.0"
+  },
   "homepage": "https://github.com/mrjoelkemp/node-dependency-tree",
   "dependencies": {
     "commander": "^2.6.0",
     "debug": "^3.1.0",
-    "filing-cabinet": "^1.12.0",
-    "precinct": "^3.8.0"
+    "filing-cabinet": "^1.13.0",
+    "precinct": "^4.0.0"
   },
   "devDependencies": {
     "babel": "~5.8.38",
     "jscs": "~2.11.0",
     "jscs-preset-mrjoelkemp": "~1.0.0",
     "mocha": "~2.0.1",
-    "mock-fs": "~3.11.0",
+    "mock-fs": "^4.x.x",
+    "resolve": "^1.5.0",
     "rewire": "~2.5.2",
-    "sinon": "~1.12.2"
+    "sinon": "~1.12.2",
+    "typescript": "^2.4.2",
+    "module-definition": "^2.2.4"
   }
 }

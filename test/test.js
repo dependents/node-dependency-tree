@@ -6,6 +6,11 @@ import precinct from 'precinct';
 import rewire from 'rewire';
 import Config from '../lib/Config';
 
+// Bootstrap lazy requires
+import resolve from 'resolve';
+import typescript from 'typescript';
+import moduleDefinition from 'module-definition';
+
 const dependencyTree = rewire('../');
 
 describe('dependencyTree', function() {
