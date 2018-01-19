@@ -1,5 +1,4 @@
 var precinct = require('precinct');
-var path = require('path');
 var fs = require('fs');
 var cabinet = require('filing-cabinet');
 var debug = require('debug')('tree');
