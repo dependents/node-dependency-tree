@@ -1,11 +1,11 @@
 'use strict';
 
-var precinct = require('precinct');
-var path = require('path');
-var fs = require('fs');
-var cabinet = require('filing-cabinet');
-var debug = require('debug')('tree');
-var Config = require('./lib/Config');
+const precinct = require('precinct');
+const path = require('path');
+const fs = require('fs');
+const cabinet = require('filing-cabinet');
+const debug = require('debug')('tree');
+const Config = require('./lib/Config');
 
 /**
  * Recursively find all dependencies (avoiding circular) traversing the entire dependency tree
@@ -24,20 +24,20 @@ var Config = require('./lib/Config');
  * @return {Object}
  */
 module.exports = function(options) {
-  var config = new Config(options);
+  const config = new Config(options);
 
   if (!fs.existsSync(config.filename)) {
     debug('file ' + config.filename + ' does not exist');
     return config.isListForm ? [] : {};
   }
 
-  var results = traverse(config);
+  const results = traverse(config);
   debug('traversal complete', results);
 
   dedupeNonExistent(config.nonExistent);
   debug('deduped list of nonExistent partials: ', config.nonExistent);
 
-  var tree;
+  let tree;
   if (config.isListForm) {
     debug('list form of results requested');
 
@@ -82,8 +82,8 @@ module.exports.toList = function(options) {
  * @return {Array}
  */
 module.exports._getDependencies = function(config) {
-  var dependencies;
-  var precinctOptions = config.detectiveConfig;
+  let dependencies;
+  const precinctOptions = config.detectiveConfig;
   precinctOptions.includeCore = false;
 
   try {
@@ -97,12 +97,12 @@ module.exports._getDependencies = function(config) {
     return [];
   }
 
-  var resolvedDependencies = [];
+  const resolvedDependencies = [];
 
-  for (var i = 0, l = dependencies.length; i < l; i++) {
-    var dep = dependencies[i];
+  for (let i = 0, l = dependencies.length; i < l; i++) {
+    const dep = dependencies[i];
 
-    var result = cabinet({
+    const result = cabinet({
       partial: dep,
       filename: config.filename,
       directory: config.directory,
@@ -118,7 +118,7 @@ module.exports._getDependencies = function(config) {
       continue;
     }
 
-    var exists = fs.existsSync(result);
+    const exists = fs.existsSync(result);
 
     if (!exists) {
       config.nonExistent.push(dep);
@@ -137,7 +137,7 @@ module.exports._getDependencies = function(config) {
  * @return {Object|String[]}
  */
 function traverse(config) {
-  var subTree = config.isListForm ? [] : {};
+  let subTree = config.isListForm ? [] : {};
 
   debug('traversing ' + config.filename);
 
@@ -146,7 +146,7 @@ function traverse(config) {
     return config.visited[config.filename];
   }
 
-  var dependencies = module.exports._getDependencies(config);
+  let dependencies = module.exports._getDependencies(config);
 
   debug('cabinet-resolved all dependencies: ', dependencies);
   // Prevents cycles by eagerly marking the current file as read
@@ -162,9 +162,9 @@ function traverse(config) {
     debug('filtered number of dependencies: ' + dependencies.length);
   }
 
-  for (var i = 0, l = dependencies.length; i < l; i++) {
-    var d = dependencies[i];
-    var localConfig = config.clone();
+  for (let i = 0, l = dependencies.length; i < l; i++) {
+    const d = dependencies[i];
+    const localConfig = config.clone();
     localConfig.filename = d;
 
     if (localConfig.isListForm) {
@@ -194,8 +194,8 @@ function traverse(config) {
  * @return {String[]}
  */
 function removeDups(list) {
-  var cache = {};
-  var unique = [];
+  const cache = {};
+  const unique = [];
 
   list.forEach(function(item) {
     if (!cache[item]) {
@@ -209,10 +209,10 @@ function removeDups(list) {
 
 // Mutate the list input to do a dereferenced modification of the user-supplied list
 function dedupeNonExistent(nonExistent) {
-  var deduped = removeDups(nonExistent);
+  const deduped = removeDups(nonExistent);
   nonExistent.length = deduped.length;
 
-  for (var i = 0, l = deduped.length; i < l; i++) {
+  for (let i = 0, l = deduped.length; i < l; i++) {
     nonExistent[i] = deduped[i];
   }
 }
