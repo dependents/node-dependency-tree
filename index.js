@@ -1,3 +1,5 @@
+'use strict';
+
 var precinct = require('precinct');
 var path = require('path');
 var fs = require('fs');
