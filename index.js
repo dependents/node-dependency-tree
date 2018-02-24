@@ -41,9 +41,7 @@ module.exports = function(options) {
   if (config.isListForm) {
     debug('list form of results requested');
 
-    tree = removeDups(results);
-    debug('removed dups from the resulting list');
-
+    tree = Array.from(results);
   } else {
     debug('object form of results requested');
 
@@ -134,10 +132,10 @@ module.exports._getDependencies = function(config) {
 
 /**
  * @param  {Config} config
- * @return {Object|String[]}
+ * @return {Object|Set}
  */
 function traverse(config) {
-  let subTree = config.isListForm ? [] : {};
+  let subTree = config.isListForm ? new Set() : {};
 
   debug('traversing ' + config.filename);
 
@@ -168,18 +166,17 @@ function traverse(config) {
     localConfig.filename = d;
 
     if (localConfig.isListForm) {
-      subTree = subTree.concat(traverse(localConfig));
+      for (let item of traverse(localConfig)) {
+        subTree.add(item);
+      }
     } else {
       subTree[d] = traverse(localConfig);
     }
   }
 
   if (config.isListForm) {
-    // Prevents redundancy about each memoized step
-    subTree = removeDups(subTree);
-    subTree.push(config.filename);
-    config.visited[config.filename] = config.visited[config.filename].concat(subTree);
-
+    subTree.add(config.filename);
+    config.visited[config.filename].push(...subTree);
   } else {
     config.visited[config.filename] = subTree;
   }
@@ -187,32 +184,14 @@ function traverse(config) {
   return subTree;
 }
 
-/**
- * Returns a list of unique items from the array
- *
- * @param  {String[]} list
- * @return {String[]}
- */
-function removeDups(list) {
-  const cache = new Set();
-  const unique = [];
-
-  list.forEach(function(item) {
-    if (!cache.has(item)) {
-      unique.push(item);
-      cache.add(item);
-    }
-  });
-
-  return unique;
-}
-
 // Mutate the list input to do a dereferenced modification of the user-supplied list
 function dedupeNonExistent(nonExistent) {
-  const deduped = removeDups(nonExistent);
-  nonExistent.length = deduped.length;
+  const deduped = new Set(nonExistent);
+  nonExistent.length = deduped.size;
 
-  for (let i = 0, l = deduped.length; i < l; i++) {
-    nonExistent[i] = deduped[i];
+  let i = 0;
+  for (const elem of deduped) {
+    nonExistent[i] = elem;
+    i++;
   }
 }
