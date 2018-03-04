@@ -194,13 +194,13 @@ function traverse(config) {
  * @return {String[]}
  */
 function removeDups(list) {
-  const cache = {};
+  const cache = new Set();
   const unique = [];
 
   list.forEach(function(item) {
-    if (!cache[item]) {
+    if (!cache.has(item)) {
       unique.push(item);
-      cache[item] = true;
+      cache.add(item);
     }
   });
 
