@@ -2,8 +2,8 @@
 
 'use strict';
 
-var dependencyTree = require('../');
-var program = require('commander');
+const dependencyTree = require('../');
+const program = require('commander');
 
 program
   .version(require('../package.json').version)
@@ -14,9 +14,9 @@ program
   .option('--list-form', 'output the list form of the tree (one element per line)')
   .parse(process.argv);
 
-var tree;
+let tree;
 
-var options = {
+const options = {
   filename: program.args[0],
   root: program.directory,
   config: program.requireConfig,
