@@ -4,7 +4,7 @@
   "description": "Get the dependency tree of a module",
   "main": "index.js",
   "scripts": {
-    "test": "jscs index.js test/test.js && ./node_modules/.bin/mocha --require babel-core/register  test/test.js"
+    "test": "jscs index.js test/test.js && ./node_modules/.bin/mocha --require @babel/register test/test.js"
   },
   "bin": {
     "dependency-tree": "bin/cli.js"
@@ -44,18 +44,18 @@
     "precinct": "^4.2.0"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.0",
-    "babel-register": "^6.26.0",
-    "babel-preset-env": "~1.6.1",
+    "@babel/cli": "^7.0.0",
+    "@babel/core": "^7.0.0",
+    "@babel/preset-env": "^7.0.0",
+    "@babel/register": "^7.0.0",
     "jscs": "^3.0.7",
     "jscs-preset-mrjoelkemp": "~2.0.0",
     "mocha": "^5.0.0",
     "mock-fs": "^4.0.0",
+    "module-definition": "^2.2.4",
     "resolve": "^1.5.0",
     "rewire": "^3.0.2",
     "sinon": "^4.1.3",
-    "typescript": "^2.4.2",
-    "module-definition": "^2.2.4"
+    "typescript": "^2.4.2"
   }
 }
