@@ -6,11 +6,6 @@ import precinct from 'precinct';
 import rewire from 'rewire';
 import Config from '../lib/Config';
 
-// Bootstrap lazy requires
-import resolve from 'resolve';
-import typescript from 'typescript';
-import moduleDefinition from 'module-definition';
-
 const dependencyTree = rewire('../');
 
 describe('dependencyTree', function() {
@@ -88,19 +83,6 @@ describe('dependencyTree', function() {
     });
   }
 
-  function mockTS() {
-    mockfs({
-      [__dirname + '/example/ts']: {
-        'a.ts': `
-          import b from './b';
-          import c from './c';
-        `,
-        'b.ts': 'export default function() {};',
-        'c.ts': 'export default function() {};'
-      }
-    });
-  }
-
   afterEach(function() {
     mockfs.restore();
   });
@@ -119,22 +101,7 @@ describe('dependencyTree', function() {
   });
 
   it('handles nested tree structures', function() {
-    mockfs({
-      [__dirname + '/extended']: {
-        'a.js': `var b = require('./b');
-                 var c = require('./c');`,
-        'b.js': `var d = require('./d');
-                 var e = require('./e');`,
-        'c.js': `var f = require('./f');
-                 var g = require('./g');`,
-        'd.js': '',
-        'e.js': '',
-        'f.js': '',
-        'g.js': ''
-      }
-    });
-
-    const directory = __dirname + '/extended';
+    const directory = __dirname + '/example/extended';
     const filename = directory + '/a.js';
 
     const tree = dependencyTree({filename, directory});
@@ -534,10 +501,6 @@ describe('dependencyTree', function() {
     });
 
     describe('typescript', function() {
-      beforeEach(function() {
-        mockTS();
-      });
-
       testTreesForFormat('ts', '.ts');
     });
   });
@@ -631,10 +594,6 @@ describe('dependencyTree', function() {
       });
 
       describe('typescript', function() {
-        beforeEach(function() {
-          mockTS();
-        });
-
         testToList('ts', '.ts');
       });
     });

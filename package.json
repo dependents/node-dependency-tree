@@ -38,10 +38,10 @@
   },
   "homepage": "https://github.com/mrjoelkemp/node-dependency-tree",
   "dependencies": {
-    "commander": "^2.16.0",
-    "debug": "^3.1.0",
+    "commander": "^2.17.1",
+    "debug": "^4.0.1",
     "filing-cabinet": "^2.0.1",
-    "precinct": "^4.2.0"
+    "precinct": "^5.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",
@@ -51,11 +51,9 @@
     "jscs": "^3.0.7",
     "jscs-preset-mrjoelkemp": "~2.0.0",
     "mocha": "^5.0.0",
-    "mock-fs": "^4.0.0",
-    "module-definition": "^2.2.4",
+    "mock-fs": "^4.7.0",
     "resolve": "^1.5.0",
     "rewire": "^4.0.1",
-    "sinon": "^6.1.5",
-    "typescript": "^2.4.2"
+    "sinon": "^6.1.5"
   }
 }
