@@ -21,6 +21,7 @@ var tree = dependencyTree({
   directory: 'path/to/all/files',
   requireConfig: 'path/to/requirejs/config', // optional
   webpackConfig: 'path/to/webpack/config', // optional
+  tsConfig: 'path/to/typescript/config', // optional
   nodeModulesConfig: {
     entry: 'module'
   }, // optional
@@ -41,6 +42,7 @@ var list = dependencyTree.toList({
 
 * `requireConfig`: path to a requirejs config for AMD modules (allows for the result of aliased module paths)
 * `webpackConfig`: path to a webpack config for aliased modules
+* `tsConfig`: path to a typescript config (or a preloaded object representing the typescript config)
 * `nodeModulesConfig`: config for resolving entry file for node_modules
 * `visited`: object used for avoiding redundant subtree generations via memoization.
 * `nonExistent`: array used for storing the list of partial paths that do not exist
