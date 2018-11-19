@@ -380,6 +380,30 @@ describe('dependencyTree', function() {
     });
   });
 
+  describe('when a filter function is supplied', function() {
+    it('uses the filter to determine if a file should be included in the results', function() {
+      const directory = __dirname + '/example/onlyRealDeps';
+      const filename = directory + '/a.js';
+
+      const tree = dependencyTree({
+        filename,
+        directory,
+        // Skip all 3rd party deps
+        filter: (filePath, moduleFile) => {
+          assert.ok(require.resolve('debug'));
+          assert.ok(moduleFile.match('test/example/onlyRealDeps/a.js'));
+          return filePath.indexOf('node_modules') === -1;
+        }
+      });
+
+      const subTree = tree[filename];
+      assert.ok(Object.keys(tree).length);
+
+      const has3rdPartyDep = Object.keys(subTree).some(dep => dep === require.resolve('debug'));
+      assert.ok(!has3rdPartyDep);
+    });
+  });
+
   describe('memoization (#2)', function() {
     beforeEach(function() {
       this._spy = sinon.spy(dependencyTree, '_getDependencies');
@@ -435,6 +459,60 @@ describe('dependencyTree', function() {
 
     describe('commonjs', function() {
       testTreesForFormat('commonjs');
+
+      describe('when given a CJS file with lazy requires', function() {
+        beforeEach(function() {
+          mockfs({
+            [__dirname + '/cjs']: {
+              'foo.js': 'module.exports = function(bar = require("./bar")) {};',
+              'bar.js': 'module.exports = 1;'
+            }
+          });
+        });
+
+        it('includes the lazy dependency', function() {
+          const directory = __dirname + '/cjs';
+          const filename = directory + '/foo.js';
+
+          const tree = dependencyTree({filename, directory});
+          const subTree = tree[filename];
+
+          assert.ok(`${directory}/bar.js` in subTree);
+        });
+      });
+
+      describe('when given a CJS file with module property in package.json', function() {
+        beforeEach(function() {
+          mockfs({
+            [__dirname + '/es6']: {
+              ['module.entry.js']: 'import * as module from "module.entry"',
+              ['node_modules']: {
+                ['module.entry']: {
+                  'index.main.js': 'module.exports = function() {};',
+                  'index.module.js': 'module.exports = function() {};',
+                  'package.json': '{ "main": "index.main.js", "module": "index.module.js" }'
+                }
+              }
+            }
+          });
+        });
+
+        it('it includes the module entry as dependency', function() {
+          const directory = __dirname + '/es6';
+          const filename = directory + '/module.entry.js';
+
+          const tree = dependencyTree({
+            filename,
+            directory,
+            nodeModulesConfig: {
+              entry: 'module'
+            }
+          });
+          const subTree = tree[filename];
+
+          assert.ok(`${directory}/node_modules/module.entry/index.module.js` in subTree);
+        });
+      });
     });
 
     describe('es6', function() {
@@ -474,6 +552,97 @@ describe('dependencyTree', function() {
 
         assert.ok(tree[`${this._directory}/c.js`]);
       });
+
+      describe('when given an es6 file using CJS lazy requires', function() {
+        beforeEach(function() {
+          mockfs({
+            [__dirname + '/es6']: {
+              'foo.js': 'export default function(bar = require("./bar")) {};',
+              'bar.js': 'export default 1;'
+            }
+          });
+        });
+
+        describe('and mixedImport mode is turned on', function() {
+          it('includes the lazy dependency', function() {
+            const directory = __dirname + '/es6';
+            const filename = directory + '/foo.js';
+
+            const tree = dependencyTree({
+              filename,
+              directory,
+              detective: {
+                es6: {
+                  mixedImports: true
+                }
+              }
+            });
+
+            const subTree = tree[filename];
+
+            assert.ok(`${directory}/bar.js` in subTree);
+          });
+
+          it('also works for toList', function() {
+            const directory = __dirname + '/es6';
+            const filename = directory + '/foo.js';
+
+            const results = dependencyTree.toList({
+              filename,
+              directory,
+              detective: {
+                es6: {
+                  mixedImports: true
+                }
+              }
+            });
+
+            assert.equal(results[0], `${directory}/bar.js`);
+            assert.equal(results[1], filename);
+          });
+        });
+
+        describe('and mixedImport mode is turned off', function() {
+          it('does not include the lazy dependency', function() {
+            const directory = __dirname + '/es6';
+            const filename = directory + '/foo.js';
+
+            const tree = dependencyTree({
+              filename,
+              directory
+            });
+
+            const subTree = tree[filename];
+
+            assert.ok(!(`${directory}/bar.js` in subTree));
+          });
+        });
+      });
+
+      describe('when given an es6 file using dynamic imports', function() {
+        beforeEach(function() {
+          mockfs({
+            [__dirname + '/es6']: {
+              'foo.js': 'import("./bar");',
+              'bar.js': 'export default 1;'
+            }
+          });
+        });
+
+        it('includes the dynamic import', function() {
+          const directory = __dirname + '/es6';
+          const filename = directory + '/foo.js';
+
+          const tree = dependencyTree({
+            filename,
+            directory
+          });
+
+          const subTree = tree[filename];
+
+          assert.ok(!(`${directory}/bar.js` in subTree));
+        });
+      });
     });
 
     describe('sass', function() {
@@ -502,6 +671,19 @@ describe('dependencyTree', function() {
 
     describe('typescript', function() {
       testTreesForFormat('ts', '.ts');
+
+      it('utilizes a tsconfig', function() {
+        const directory = path.join(__dirname, 'example/ts');
+        const tsConfigPath = path.join(directory, '.tsconfig');
+
+        const results = dependencyTree.toList({
+          filename: `${__dirname}/example/ts/a.ts`,
+          directory,
+          tsConfig: tsConfigPath
+        });
+
+        console.log('results: ', results);
+      });
     });
   });
 
@@ -682,175 +864,6 @@ describe('dependencyTree', function() {
       const filename = path.resolve(process.cwd(), 'root/b.js');
       const aliasedFile = path.resolve(process.cwd(), 'root/lodizzle.js');
       assert.ok('root/lodizzle.js' in tree[filename]);
-    });
-  });
-
-  describe('when a filter function is supplied', function() {
-    it('uses the filter to determine if a file should be included in the results', function() {
-      const directory = __dirname + '/example/onlyRealDeps';
-      const filename = directory + '/a.js';
-
-      const tree = dependencyTree({
-        filename,
-        directory,
-        // Skip all 3rd party deps
-        filter: (filePath, moduleFile) => {
-          assert.ok(require.resolve('debug'));
-          assert.ok(moduleFile.match('test/example/onlyRealDeps/a.js'));
-          return filePath.indexOf('node_modules') === -1;
-        }
-      });
-
-      const subTree = tree[filename];
-      assert.ok(Object.keys(tree).length);
-
-      const has3rdPartyDep = Object.keys(subTree).some(dep => dep === require.resolve('debug'));
-      assert.ok(!has3rdPartyDep);
-    });
-  });
-
-  describe('when given a CJS file with lazy requires', function() {
-    beforeEach(function() {
-      mockfs({
-        [__dirname + '/cjs']: {
-          'foo.js': 'module.exports = function(bar = require("./bar")) {};',
-          'bar.js': 'module.exports = 1;'
-        }
-      });
-    });
-
-    it('includes the lazy dependency', function() {
-      const directory = __dirname + '/cjs';
-      const filename = directory + '/foo.js';
-
-      const tree = dependencyTree({filename, directory});
-      const subTree = tree[filename];
-
-      assert.ok(`${directory}/bar.js` in subTree);
-    });
-  });
-
-  describe('when given an es6 file using CJS lazy requires', function() {
-    beforeEach(function() {
-      mockfs({
-        [__dirname + '/es6']: {
-          'foo.js': 'export default function(bar = require("./bar")) {};',
-          'bar.js': 'export default 1;'
-        }
-      });
-    });
-
-    describe('and mixedImport mode is turned on', function() {
-      it('includes the lazy dependency', function() {
-        const directory = __dirname + '/es6';
-        const filename = directory + '/foo.js';
-
-        const tree = dependencyTree({
-          filename,
-          directory,
-          detective: {
-            es6: {
-              mixedImports: true
-            }
-          }
-        });
-
-        const subTree = tree[filename];
-
-        assert.ok(`${directory}/bar.js` in subTree);
-      });
-
-      it('also works for toList', function() {
-        const directory = __dirname + '/es6';
-        const filename = directory + '/foo.js';
-
-        const results = dependencyTree.toList({
-          filename,
-          directory,
-          detective: {
-            es6: {
-              mixedImports: true
-            }
-          }
-        });
-
-        assert.equal(results[0], `${directory}/bar.js`);
-        assert.equal(results[1], filename);
-      });
-    });
-
-    describe('and mixedImport mode is turned off', function() {
-      it('does not include the lazy dependency', function() {
-        const directory = __dirname + '/es6';
-        const filename = directory + '/foo.js';
-
-        const tree = dependencyTree({
-          filename,
-          directory
-        });
-
-        const subTree = tree[filename];
-
-        assert.ok(!(`${directory}/bar.js` in subTree));
-      });
-    });
-  });
-
-  describe('when given an es6 file using dynamic imports', function() {
-    beforeEach(function() {
-      mockfs({
-        [__dirname + '/es6']: {
-          'foo.js': 'import("./bar");',
-          'bar.js': 'export default 1;'
-        }
-      });
-    });
-
-    it('includes the dynamic import', function() {
-      const directory = __dirname + '/es6';
-      const filename = directory + '/foo.js';
-
-      const tree = dependencyTree({
-        filename,
-        directory
-      });
-
-      const subTree = tree[filename];
-
-      assert.ok(!(`${directory}/bar.js` in subTree));
-    });
-  });
-
-  describe('when given a CJS file with module property in package.json', function() {
-    beforeEach(function() {
-      mockfs({
-        [__dirname + '/es6']: {
-          ['module.entry.js']: 'import * as module from "module.entry"',
-          ['node_modules']: {
-            ['module.entry']: {
-              'index.main.js': 'module.exports = function() {};',
-              'index.module.js': 'module.exports = function() {};',
-              'package.json': '{ "main": "index.main.js", "module": "index.module.js" }'
-            }
-          }
-        }
-      });
-    });
-
-    it('it includes the module entry as dependency', function() {
-      const directory = __dirname + '/es6';
-      const filename = directory + '/module.entry.js';
-
-      const tree = dependencyTree({
-        filename,
-        directory,
-        nodeModulesConfig: {
-          entry: 'module'
-        }
-      });
-      const subTree = tree[filename];
-
-      assert.ok(`${directory}/node_modules/module.entry/index.module.js` in subTree);
     });
   });
 

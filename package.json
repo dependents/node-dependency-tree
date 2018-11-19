@@ -40,8 +40,8 @@
   "dependencies": {
     "commander": "^2.17.1",
     "debug": "^4.0.1",
-    "filing-cabinet": "^2.0.1",
-    "precinct": "^5.0.0"
+    "filing-cabinet": "^2.1.0",
+    "precinct": "^5.1.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",
