@@ -682,7 +682,20 @@ describe('dependencyTree', function() {
           tsConfig: tsConfigPath
         });
 
-        console.log('results: ', results);
+        assert.equal(results[0], path.join(directory, 'b.ts'));
+        assert.equal(results[1], path.join(directory, 'c.ts'));
+        assert.equal(results[2], path.join(directory, 'a.ts'));
+      });
+
+      it('supports tsx files', function() {
+        const directory = path.join(__dirname, 'example/ts');
+
+        const results = dependencyTree.toList({
+          filename: `${__dirname}/example/ts/d.tsx`,
+          directory
+        });
+
+        assert.equal(results[0], path.join(directory, 'c.ts'));
       });
     });
   });

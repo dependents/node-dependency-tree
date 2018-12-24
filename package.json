@@ -38,21 +38,21 @@
   },
   "homepage": "https://github.com/mrjoelkemp/node-dependency-tree",
   "dependencies": {
-    "commander": "^2.17.1",
-    "debug": "^4.0.1",
-    "filing-cabinet": "^2.1.0",
-    "precinct": "^5.1.0"
+    "commander": "^2.19.0",
+    "debug": "^4.1.1",
+    "filing-cabinet": "^2.2.0",
+    "precinct": "^5.3.1"
   },
   "devDependencies": {
-    "@babel/cli": "^7.0.0",
-    "@babel/core": "^7.0.0",
-    "@babel/preset-env": "^7.0.0",
+    "@babel/cli": "^7.2.3",
+    "@babel/core": "^7.2.2",
+    "@babel/preset-env": "^7.2.3",
     "@babel/register": "^7.0.0",
     "jscs": "^3.0.7",
     "jscs-preset-mrjoelkemp": "~2.0.0",
     "mocha": "^5.0.0",
     "mock-fs": "^4.7.0",
-    "resolve": "^1.5.0",
+    "resolve": "^1.9.0",
     "rewire": "^4.0.1",
     "sinon": "^6.1.5"
   }
