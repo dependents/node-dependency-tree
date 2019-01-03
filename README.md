@@ -107,7 +107,7 @@ At the end of traversing every file (in a depth-first fashion), we have a fully 
 
 #### Why aren't some some dependencies being detected?
 
-If there are bugs in [precinct](https://github.com/dependents/node-precinct) or if the `requireConfig`/`webpackConfig` options are incomplete,
+If there are bugs in [precinct](https://github.com/dependents/node-precinct) or if the `requireConfig`/`webpackConfig`/`tsConfig` options are incomplete,
 some dependencies may not be resolved. The optional array passed to the `nonExistent` option will be populated with paths
 that could not be resolved. You can check this array to see where problems might exist.
 
