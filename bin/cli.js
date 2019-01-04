@@ -11,6 +11,7 @@ program
   .option('-d, --directory <path>', 'location of files of supported filetypes')
   .option('-c, --require-config <path>', 'path to a requirejs config')
   .option('-w, --webpack-config <path>', 'path to a webpack config')
+  .option('-t, --ts-config <path>', 'path to a typescript config')
   .option('--list-form', 'output the list form of the tree (one element per line)')
   .parse(process.argv);
 
@@ -20,7 +21,8 @@ const options = {
   filename: program.args[0],
   root: program.directory,
   config: program.requireConfig,
-  webpackConfig: program.webpackConfig
+  webpackConfig: program.webpackConfig,
+  tsConfig: program.tsConfig
 };
 
 if (program.listForm) {
