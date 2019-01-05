@@ -41,7 +41,7 @@
     "commander": "^2.19.0",
     "debug": "^4.1.1",
     "filing-cabinet": "^2.3.0",
-    "precinct": "^5.3.1"
+    "precinct": "^6.1.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.2.3",
