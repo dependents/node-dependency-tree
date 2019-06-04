@@ -640,7 +640,7 @@ describe('dependencyTree', function() {
 
           const subTree = tree[filename];
 
-          assert.ok(!(`${directory}/bar.js` in subTree));
+          assert.ok((`${directory}/bar.js` in subTree));
         });
       });
     });
