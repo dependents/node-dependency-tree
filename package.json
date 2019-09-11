@@ -37,6 +37,10 @@
     "node": ">=6.0.0"
   },
   "homepage": "https://github.com/mrjoelkemp/node-dependency-tree",
+  "files": [
+    "bin",
+    "lib"
+  ],
   "dependencies": {
     "commander": "^2.19.0",
     "debug": "^4.1.1",
