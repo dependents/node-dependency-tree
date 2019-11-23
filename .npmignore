@@ -1,0 +1,6 @@
+test/
+.babelrc
+.deprc
+.jscsrc
+.travis.yml
+webpack.config.js
