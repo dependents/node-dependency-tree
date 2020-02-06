@@ -881,6 +881,20 @@ describe('dependencyTree', function() {
   });
 
   describe('Config', function() {
+    describe('when given a path to a typescript config', function() {
+      it('pre-parses the config for performance', function() {
+        const directory = path.join(__dirname, 'example/ts');
+        const tsConfigPath = path.join(directory, '.tsconfig');
+        const config = new Config({
+          filename: 'foo',
+          directory: 'bar',
+          tsConfig: tsConfigPath
+        });
+
+        assert(typeof config.tsConfig === 'object');
+      });
+    });
+
     describe('when cloning', function() {
       describe('and a detective config was set', function() {
         it('retains the detective config in the clone', function() {
