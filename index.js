@@ -197,11 +197,9 @@ function traverse(config) {
   }
 
   if (config.isListForm) {
-    debug('NEW FILE FOUND', config.filename);
     subTree.add(config.filename);
     config.visited[config.filename].push(...subTree);
   } else if (config.isPackageForm) {
-    debug('NEW PACKAGE FOUND:', config.pkgId);
     subTree.add(config.pkgId);
     config.visited[config.filename].push(...subTree);
   } else {
