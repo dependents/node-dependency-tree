@@ -49,7 +49,9 @@ module.exports = function (options) {
   } else if (config.isPackageForm) {
     debug('package form of results requested');
 
-    tree = Array.from(results);
+    tree = Array.from(results).filter((item) => {
+      return item != '';
+    });
   } else {
     debug('object form of results requested');
 
@@ -187,7 +189,7 @@ function traverse(config) {
       }
     } else if (localConfig.isPackageForm) {
       for (let item of traverse(localConfig)) {
-        if (item.length > 0) {
+        if (item && item.length > 0) {
           subTree.add(item);
         }
       }
@@ -237,7 +239,7 @@ function getPakcageId(config) {
   const pkgPath = directoryList.join(path.sep).concat('/', 'package.json');
   if (!fs.existsSync(pkgPath)) {
     debug('package.json does not exist');
-    return [];
+    return '';
   }
   const pkgFile = fs.readFileSync(pkgPath);
   const pkgId = JSON.parse(pkgFile)['_id'];
