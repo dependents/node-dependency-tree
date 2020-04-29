@@ -189,9 +189,7 @@ function traverse(config) {
       }
     } else if (localConfig.isPackageForm) {
       for (let item of traverse(localConfig)) {
-        if (item && item.length > 0) {
-          subTree.add(item);
-        }
+        subTree.add(item);
       }
     } else {
       subTree[d] = traverse(localConfig);
