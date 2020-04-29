@@ -154,8 +154,6 @@ function traverse(config) {
 
   debug('\ntraversing ' + config.filename);
 
-
-
   if (config.visited[config.filename]) {
     debug('already visited ' + config.filename);
     return config.visited[config.filename];
@@ -225,6 +223,12 @@ function dedupeNonExistent(nonExistent) {
   }
 }
 
+/**
+ * Get the "_id" value in package.json file of a JavaScript module which is its module name and version
+ *
+ * @param {Config} config
+ * @return {String}
+ */
 function getPakcageId(config) {
   const directoryList = config.filename.split(path.sep);
   while (directoryList.length > 2 && directoryList[directoryList.length - 2] !== 'node_modules') {
