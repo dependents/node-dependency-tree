@@ -152,29 +152,29 @@ module.exports._getDependencies = function (config) {
 function traverse(config) {
   let subTree = config.isListForm || config.isPackageForm ? new Set() : {};
 
-  console.log('\ntraversing ' + config.filename);
+  debug('\ntraversing ' + config.filename);
 
 
 
   if (config.visited[config.filename]) {
-    console.log('already visited ' + config.filename);
+    debug('already visited ' + config.filename);
     return config.visited[config.filename];
   }
 
   let dependencies = module.exports._getDependencies(config);
 
-  // console.log('cabinet-resolved all dependencies: ', dependencies);
+  debug('cabinet-resolved all dependencies: ', dependencies);
   // Prevents cycles by eagerly marking the current file as read
   // so that any dependent dependencies exit
   config.visited[config.filename] = config.isListForm || config.isPackageForm ? [] : {};
 
   if (config.filter) {
-    console.log('using filter function to filter out dependencies');
-    console.log('unfiltered number of dependencies: ' + dependencies.length);
+    debug('using filter function to filter out dependencies');
+    debug('unfiltered number of dependencies: ' + dependencies.length);
     dependencies = dependencies.filter(function (filePath) {
       return config.filter(filePath, config.filename);
     });
-    console.log('filtered number of dependencies: ' + dependencies.length);
+    debug('filtered number of dependencies: ' + dependencies.length);
   }
 
   for (let i = 0, l = dependencies.length; i < l; i++) {
@@ -199,11 +199,11 @@ function traverse(config) {
   }
 
   if (config.isListForm) {
-    console.log('NEW FILE FOUND', config.filename);
+    debug('NEW FILE FOUND', config.filename);
     subTree.add(config.filename);
     config.visited[config.filename].push(...subTree);
   } else if (config.isPackageForm) {
-    console.log('NEW PACKAGE FOUND:', config.pkgId);
+    debug('NEW PACKAGE FOUND:', config.pkgId);
     subTree.add(config.pkgId);
     config.visited[config.filename].push(...subTree);
   } else {
@@ -232,7 +232,7 @@ function getPakcageId(config) {
   }
   const pkgPath = directoryList.join(path.sep).concat('/', 'package.json');
   if (!fs.existsSync(pkgPath)) {
-    console.log('package.json does not exist');
+    debug('package.json does not exist');
     return [];
   }
   const pkgFile = fs.readFileSync(pkgPath);
