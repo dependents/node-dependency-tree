@@ -21,16 +21,19 @@ const Config = require('./lib/Config');
  *                             Format is a filename -> tree as list lookup table
  * @param {Array} [options.nonExistent] - List of partials that do not exist
  * @param {Boolean} [options.isListForm=false]
+ * @param {Boolean} [options.isPackageForm=false]
  * @param {String|Object} [options.tsConfig] Path to a typescript config (or a preloaded one).
  * @return {Object}
  */
-module.exports = function(options) {
+module.exports = function (options) {
   const config = new Config(options);
 
   if (!fs.existsSync(config.filename)) {
     debug('file ' + config.filename + ' does not exist');
-    return config.isListForm ? [] : {};
+    return config.isListForm || config.isPackageForm ? [] : {};
   }
+
+  config.pkgId = getPakcageId(config);
 
   const results = traverse(config);
   debug('traversal complete', results);
@@ -41,6 +44,10 @@ module.exports = function(options) {
   let tree;
   if (config.isListForm) {
     debug('list form of results requested');
+
+    tree = Array.from(results);
+  } else if (config.isPackageForm) {
+    debug('package form of results requested');
 
     tree = Array.from(results);
   } else {
@@ -66,11 +73,17 @@ module.exports = function(options) {
  *
  * Params are those of module.exports
  */
-module.exports.toList = function(options) {
+module.exports.toList = function (options) {
   options.isListForm = true;
 
   return module.exports(options);
 };
+
+module.exports.toPackage = function (options) {
+  options.isPackageForm = true;
+
+  return module.exports(options);
+}
 
 /**
  * Returns the list of dependencies for the given filename
@@ -80,7 +93,7 @@ module.exports.toList = function(options) {
  * @param  {Config} config
  * @return {Array}
  */
-module.exports._getDependencies = function(config) {
+module.exports._getDependencies = function (config) {
   let dependencies;
   const precinctOptions = config.detectiveConfig;
   precinctOptions.includeCore = false;
@@ -137,39 +150,48 @@ module.exports._getDependencies = function(config) {
  * @return {Object|Set}
  */
 function traverse(config) {
-  let subTree = config.isListForm ? new Set() : {};
+  let subTree = config.isListForm || config.isPackageForm ? new Set() : {};
 
-  debug('traversing ' + config.filename);
+  console.log('\ntraversing ' + config.filename);
+
+
 
   if (config.visited[config.filename]) {
-    debug('already visited ' + config.filename);
+    console.log('already visited ' + config.filename);
     return config.visited[config.filename];
   }
 
   let dependencies = module.exports._getDependencies(config);
 
-  debug('cabinet-resolved all dependencies: ', dependencies);
+  // console.log('cabinet-resolved all dependencies: ', dependencies);
   // Prevents cycles by eagerly marking the current file as read
   // so that any dependent dependencies exit
-  config.visited[config.filename] = config.isListForm ? [] : {};
+  config.visited[config.filename] = config.isListForm || config.isPackageForm ? [] : {};
 
   if (config.filter) {
-    debug('using filter function to filter out dependencies');
-    debug('unfiltered number of dependencies: ' + dependencies.length);
-    dependencies = dependencies.filter(function(filePath) {
+    console.log('using filter function to filter out dependencies');
+    console.log('unfiltered number of dependencies: ' + dependencies.length);
+    dependencies = dependencies.filter(function (filePath) {
       return config.filter(filePath, config.filename);
     });
-    debug('filtered number of dependencies: ' + dependencies.length);
+    console.log('filtered number of dependencies: ' + dependencies.length);
   }
 
   for (let i = 0, l = dependencies.length; i < l; i++) {
     const d = dependencies[i];
     const localConfig = config.clone();
     localConfig.filename = d;
+    localConfig.pkgId = getPakcageId(localConfig);
 
     if (localConfig.isListForm) {
       for (let item of traverse(localConfig)) {
         subTree.add(item);
+      }
+    } else if (localConfig.isPackageForm) {
+      for (let item of traverse(localConfig)) {
+        if (item.length > 0) {
+          subTree.add(item);
+        }
       }
     } else {
       subTree[d] = traverse(localConfig);
@@ -177,7 +199,12 @@ function traverse(config) {
   }
 
   if (config.isListForm) {
+    console.log('NEW FILE FOUND', config.filename);
     subTree.add(config.filename);
+    config.visited[config.filename].push(...subTree);
+  } else if (config.isPackageForm) {
+    console.log('NEW PACKAGE FOUND:', config.pkgId);
+    subTree.add(config.pkgId);
     config.visited[config.filename].push(...subTree);
   } else {
     config.visited[config.filename] = subTree;
@@ -196,4 +223,20 @@ function dedupeNonExistent(nonExistent) {
     nonExistent[i] = elem;
     i++;
   }
+}
+
+function getPakcageId(config) {
+  const directoryList = config.filename.split(path.sep);
+  while (directoryList.length > 2 && directoryList[directoryList.length - 2] !== 'node_modules') {
+    directoryList.pop();
+  }
+  const pkgPath = directoryList.join(path.sep).concat('/', 'package.json');
+  if (!fs.existsSync(pkgPath)) {
+    console.log('package.json does not exist');
+    return [];
+  }
+  const pkgFile = fs.readFileSync(pkgPath);
+  const pkgId = JSON.parse(pkgFile)['_id'];
+  config.pkgId = pkgId;
+  return pkgId;
 }
