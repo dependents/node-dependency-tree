@@ -228,17 +228,25 @@ function dedupeNonExistent(nonExistent) {
  * @return {String}
  */
 function getPakcageId(config) {
+  console.log(config.filename);
   const directoryList = config.filename.split(path.sep);
-  while (directoryList.length > 2 && directoryList[directoryList.length - 2] !== 'node_modules') {
-    directoryList.pop();
+  if (directoryList.includes('node_modules')) {
+    let i = 0;
+    while (directoryList.length > 0 && directoryList[directoryList.length - 1] !== 'node_modules') {
+      const pkgPath = directoryList.join(path.sep).concat(path.sep, 'package.json');
+      if (pkgPath.includes('@types')) console.log('NESTED YES');
+      if (fs.existsSync(pkgPath)) {
+        const pkgFile = fs.readFileSync(pkgPath);
+        const pkgName = JSON.parse(pkgFile)['name'];
+        const pkgVersion = JSON.parse(pkgFile)['version'];
+        const pkgId = pkgName.concat('@' + pkgVersion);
+        config.pkgId = pkgId;
+        return pkgId;
+      }
+      directoryList.pop();
+      ++i;
+    }
   }
-  const pkgPath = directoryList.join(path.sep).concat('/', 'package.json');
-  if (!fs.existsSync(pkgPath)) {
-    debug('package.json does not exist');
-    return '';
-  }
-  const pkgFile = fs.readFileSync(pkgPath);
-  const pkgId = JSON.parse(pkgFile)['_id'];
-  config.pkgId = pkgId;
-  return pkgId;
+  debug('package.json does not exist');
+  return '';
 }
