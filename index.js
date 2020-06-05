@@ -228,7 +228,6 @@ function dedupeNonExistent(nonExistent) {
  * @return {String}
  */
 function getPakcageId(config) {
-  console.log(config.filename);
   const directoryList = config.filename.split(path.sep);
   if (directoryList.includes('node_modules')) {
     let i = 0;
