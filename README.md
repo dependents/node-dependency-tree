@@ -49,8 +49,8 @@ var list = dependencyTree.toList({
 * `filter`: a function used to determine if a module (and its subtree) should be included in the dependency tree
  - The first argument given to the filter is an absolute filepath to the dependency and the second is the filepath to the currently traversed file. Should return a `Boolean`. If it returns `true`, the module is included in the resulting tree.
 * `detective`: object with configuration specific to detectives used to find dependencies of a file
- - for example `detective.amd.skipLazyLoaded: true` tells the AMD detective to omit inner requires
- - See [precinct's usage docs](https://github.com/dependents/node-precinct#usage) for the list of module types you can pass options to.
+  - for example `detective.amd.skipLazyLoaded: true` tells the AMD detective to omit inner requires
+  - See [precinct's usage docs](https://github.com/dependents/node-precinct#usage) for the list of module types you can pass options to.
 
 #### Format Details
 
