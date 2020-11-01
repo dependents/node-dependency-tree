@@ -697,6 +697,29 @@ describe('dependencyTree', function() {
 
         assert.equal(results[0], path.join(directory, 'c.ts'));
       });
+
+      it('recognizes a ts file import from a js file (#104) is allowJs is on', function() {
+        const directory = path.join(__dirname, 'example/ts/mixedTsJs');
+        const tsConfigPath = path.join(directory, '.tsconfig');
+
+        const options = {
+          filename: `${directory}/a.js`,
+          directory,
+          tsConfig: tsConfigPath
+        };
+
+        const parsedTsConfig = new Config(options).tsConfig;
+
+        assert.ok(parsedTsConfig.compilerOptions.allowJs);
+
+        const results = dependencyTree.toList({
+          filename: `${directory}/a.js`,
+          directory,
+          tsConfig: tsConfigPath
+        });
+
+        assert.equal(results[0], path.join(directory, 'b.ts'));
+      });
     });
   });
 

@@ -38,11 +38,11 @@
   },
   "homepage": "https://github.com/mrjoelkemp/node-dependency-tree",
   "dependencies": {
-    "commander": "^2.19.0",
-    "debug": "^4.1.1",
-    "filing-cabinet": "^2.5.1",
-    "precinct": "^6.2.0",
-    "typescript": "^3.7.5"
+    "commander": "^2.20.3",
+    "debug": "^4.2.1",
+    "filing-cabinet": "^2.6.0",
+    "precinct": "^6.3.1",
+    "typescript": "^3.9.7"
   },
   "devDependencies": {
     "@babel/cli": "^7.2.3",

@@ -1,0 +1,7 @@
+{
+  "version": "1.0.0",
+  "compilerOptions": {
+    "module": "commonjs",
+    "allowJs": true
+  }
+}
