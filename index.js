@@ -156,7 +156,7 @@ function traverse(config) {
   } else if (config.verbose) {
     subTree = [];
   } else {
-    subTree = {}
+    subTree = {};
   }
 
   debug('traversing ' + config.filename);
@@ -171,9 +171,7 @@ function traverse(config) {
   debug('cabinet-resolved all dependencies: ', dependencies);
   // Prevents cycles by eagerly marking the current file as read
   // so that any dependent dependencies exit
-  config.visited[config.filename] = config.isListForm || config.verbose
-    ? []
-    : {};
+  config.visited[config.filename] = config.isListForm || config.verbose ? [] : {};
 
   if (config.filter) {
     debug('using filter function to filter out dependencies');
@@ -186,7 +184,7 @@ function traverse(config) {
 
   for (let i = 0, l = dependencies.length; i < l; i++) {
     const d = dependencies[i];
-    const resolved = config.verbose ? d.resolved : d
+    const resolved = config.verbose ? d.resolved : d;
     const localConfig = config.clone();
     localConfig.filename = resolved;
 
@@ -195,8 +193,8 @@ function traverse(config) {
         subTree.add(item);
       }
     } else if (localConfig.verbose) {
-      d.dependencies = traverse(localConfig)
-      subTree.push(d)
+      d.dependencies = traverse(localConfig);
+      subTree.push(d);
     } else {
       subTree[resolved] = traverse(localConfig);
     }
@@ -206,7 +204,7 @@ function traverse(config) {
     subTree.add(config.filename);
     config.visited[config.filename].push(...subTree);
   } else if (config.verbose) {
-    config.visited[config.filename] = subTree
+    config.visited[config.filename] = subTree;
   } else {
     config.visited[config.filename] = subTree;
   }
