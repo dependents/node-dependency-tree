@@ -45,16 +45,16 @@
     "typescript": "^3.9.7"
   },
   "devDependencies": {
-    "@babel/cli": "^7.2.3",
-    "@babel/core": "^7.2.2",
-    "@babel/preset-env": "^7.2.3",
-    "@babel/register": "^7.0.0",
+    "@babel/cli": "^7.12.8",
+    "@babel/core": "^7.12.9",
+    "@babel/preset-env": "^7.12.7",
+    "@babel/register": "^7.12.1",
     "jscs": "^3.0.7",
     "jscs-preset-mrjoelkemp": "~2.0.0",
-    "mocha": "^5.0.0",
-    "mock-fs": "^4.7.0",
+    "mocha": "^8.2.1",
+    "mock-fs": "^4.13.0",
     "resolve": "^1.9.0",
-    "rewire": "^4.0.1",
-    "sinon": "^6.1.5"
+    "rewire": "^5.0.0",
+    "sinon": "^9.2.1"
   }
 }
