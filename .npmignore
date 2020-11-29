@@ -1,5 +1,4 @@
 test/
-.babelrc
 .deprc
 .jscsrc
 .travis.yml
