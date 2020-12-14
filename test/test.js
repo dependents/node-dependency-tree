@@ -720,6 +720,24 @@ describe('dependencyTree', function() {
 
         assert.equal(results[0], path.join(directory, 'b.ts'));
       });
+
+      it('respects "noTypeDefinitions" flag', function() {
+        const directory = path.join(__dirname, 'example/ts/noTypeDefinitions');
+        const tsConfigPath = path.join(directory, '.tsconfig');
+
+        const results = dependencyTree.toList({
+          filename: `${directory}/a.ts`,
+          directory,
+          tsConfig: tsConfigPath,
+          noTypeDefinitions: true
+        });
+
+        assert.deepStrictEqual(results, [
+          path.join(directory, 'b.js'),
+          path.join(directory, 'c.js'),
+          path.join(directory, 'a.ts')
+        ]);
+      })
     });
   });
 

@@ -20,6 +20,7 @@ const Config = require('./lib/Config');
  * @param {Object} [options.visited] - Cache of visited, absolutely pathed files that should not be reprocessed.
  *                             Format is a filename -> tree as list lookup table
  * @param {Array} [options.nonExistent] - List of partials that do not exist
+ * @param {Boolean} [options.noTypeDefinitions=false] - For typescript files, whether to prefer *.js over *.d.ts
  * @param {Boolean} [options.isListForm=false]
  * @param {String|Object} [options.tsConfig] Path to a typescript config (or a preloaded one).
  * @return {Object}
@@ -109,7 +110,8 @@ module.exports._getDependencies = function(config) {
       config: config.requireConfig,
       webpackConfig: config.webpackConfig,
       nodeModulesConfig: config.nodeModulesConfig,
-      tsConfig: config.tsConfig
+      tsConfig: config.tsConfig,
+      noTypeDefinitions: config.noTypeDefinitions
     });
 
     if (!result) {
