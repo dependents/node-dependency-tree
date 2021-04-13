@@ -26,7 +26,8 @@ var tree = dependencyTree({
     entry: 'module'
   }, // optional
   filter: path => path.indexOf('node_modules') === -1, // optional
-  nonExistent: [] // optional
+  nonExistent: [], // optional
+  noTypeDefinitions: false // optional
 });
 
 // Returns a post-order traversal (list form) of the tree with duplicate sub-trees pruned.
@@ -51,6 +52,7 @@ var list = dependencyTree.toList({
 * `detective`: object with configuration specific to detectives used to find dependencies of a file
   - for example `detective.amd.skipLazyLoaded: true` tells the AMD detective to omit inner requires
   - See [precinct's usage docs](https://github.com/dependents/node-precinct#usage) for the list of module types you can pass options to.
+* `noTypeDefinitions`: For TypeScript imports, whether to resolve to `*.js` instead of `*.d.ts`.
 
 #### Format Details
 
