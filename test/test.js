@@ -205,6 +205,16 @@ describe('dependencyTree', function() {
     assert(tree.length === 3);
   });
 
+  it('resolves TypeScript imports to their type definition files by default', function() {
+    const directory = path.join(__dirname, 'example', 'noTypeDefinitions');
+    const filename = path.join(directory, 'entrypoint.ts');
+
+    const list = dependencyTree.toList({filename, directory});
+
+    assert(list.includes(path.join(directory, 'required.d.ts')));
+    assert(!list.includes(path.join(directory, 'required.js')));
+  });
+
   describe('when given a detective configuration', function() {
     it('passes it through to precinct', function() {
       const spy = sinon.spy(precinct, 'paperwork');
@@ -900,6 +910,32 @@ describe('dependencyTree', function() {
       const filename = path.resolve(process.cwd(), 'root/b.js');
       const aliasedFile = path.resolve(process.cwd(), 'root/lodizzle.js');
       assert.ok('root/lodizzle.js' in tree[filename]);
+    });
+  });
+
+  describe('when noTypeDefinitions is set', function() {
+    describe('and it is set to false', function() {
+      it('resolves TypeScript imports to their definition files', function() {
+        const directory = path.join(__dirname, 'example', 'noTypeDefinitions');
+        const filename = path.join(directory, 'entrypoint.ts');
+
+        const list = dependencyTree.toList({filename, directory, noTypeDefinitions: false});
+
+        assert(list.includes(path.join(directory, 'required.d.ts')));
+        assert(!list.includes(path.join(directory, 'required.js')));
+      });
+    });
+
+    describe('and it is set to true', function() {
+      it('resolves TypeScript imports to their JavaScript implementation files', function() {
+        const directory = path.join(__dirname, 'example', 'noTypeDefinitions');
+        const filename = path.join(directory, 'entrypoint.ts');
+
+        const list = dependencyTree.toList({filename, directory, noTypeDefinitions: true});
+
+        assert(list.includes(path.join(directory, 'required.js')));
+        assert(!list.includes(path.join(directory, 'required.d.ts')));
+      });
     });
   });
 
