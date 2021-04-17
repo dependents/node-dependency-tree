@@ -3,6 +3,7 @@
   "version": "8.0.0",
   "description": "Get the dependency tree of a module",
   "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
     "test": "jscs index.js test/test.js && ./node_modules/.bin/mocha --require esm test/test.js"
   },
