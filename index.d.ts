@@ -4,7 +4,7 @@ declare namespace dependencyTree {
   }
   type Tree = TreeInnerNode | string;
 
-  interface Options {
+  export interface Options {
     filename: string;
     directory: string;
     visited?: Tree;
@@ -23,10 +23,12 @@ declare namespace dependencyTree {
     clone: () => Config;
   }
 
-  function toList (options: Options): string[];
-  function _getDependencies (config: Config): string[];
+  function toList(options: Options): string[];
+  function _getDependencies(config: Config): string[];
 }
 
-declare function dependencyTree (options: dependencyTree.Options): dependencyTree.Tree;
+declare function dependencyTree(
+  options: dependencyTree.Options
+): dependencyTree.Tree;
 
 export = dependencyTree;
