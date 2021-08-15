@@ -6,6 +6,7 @@ const fs = require('fs');
 const cabinet = require('filing-cabinet');
 const debug = require('debug')('tree');
 const Config = require('./lib/Config');
+const { createMatchPath } = require('tsconfig-paths')
 
 /**
  * Recursively find all dependencies (avoiding circular) traversing the entire dependency tree
@@ -25,7 +26,7 @@ const Config = require('./lib/Config');
  * @param {Boolean} [options.noTypeDefinitions] For TypeScript imports, whether to resolve to `*.js` instead of `*.d.ts`.
  * @return {Object}
  */
-module.exports = function(options) {
+module.exports = function (options) {
   const config = new Config(options);
 
   if (!fs.existsSync(config.filename)) {
@@ -67,7 +68,7 @@ module.exports = function(options) {
  *
  * Params are those of module.exports
  */
-module.exports.toList = function(options) {
+module.exports.toList = function (options) {
   options.isListForm = true;
 
   return module.exports(options);
@@ -81,7 +82,7 @@ module.exports.toList = function(options) {
  * @param  {Config} config
  * @return {Array}
  */
-module.exports._getDependencies = function(config) {
+module.exports._getDependencies = function (config) {
   let dependencies;
   const precinctOptions = config.detectiveConfig;
   precinctOptions.includeCore = false;
@@ -97,12 +98,22 @@ module.exports._getDependencies = function(config) {
     return [];
   }
 
+
+  const tsMatchPath = (() => {
+    if (config.tsConfig) {
+      const absoluteBaseUrl = path.join(path.dirname(config.tsConfigPath), config.tsConfig.compilerOptions.baseUrl)
+      // REF: https://github.com/dividab/tsconfig-paths#creatematchpath
+      return createMatchPath(absoluteBaseUrl, config.tsConfig.compilerOptions.paths)
+    }
+    return (alias) => undefined;
+  })()
+
   const resolvedDependencies = [];
 
   for (let i = 0, l = dependencies.length; i < l; i++) {
     const dep = dependencies[i];
 
-    const result = cabinet({
+    let result = cabinet({
       partial: dep,
       filename: config.filename,
       directory: config.directory,
@@ -114,6 +125,46 @@ module.exports._getDependencies = function(config) {
       noTypeDefinitions: config.noTypeDefinitions
     });
 
+    // Check if the dep is ts path mapping alias, and if so, update the result.
+    if (!result) {
+      result = (() => {
+        // REF: https://github.com/dividab/tsconfig-paths#creatematchpath
+        const resolvedTsAliasPath = tsMatchPath(dep) // Get absolute path by ts path mapping. `undefined` if non-existent
+        if (resolvedTsAliasPath) {
+          const stat = (() => {
+            try {
+              // fs.statSync throws an error if path is non-existent
+              return fs.statSync(resolvedTsAliasPath)
+            } catch (error) {
+              return undefined
+            }
+          })()
+          if (stat) {
+            if (stat.isDirectory()) {
+              // When directory is imported, index file is resolved
+              for (const indexFile of ['index.ts', 'index.tsx', 'index.js', 'index.jsx']) {
+                const filename = path.join(resolvedTsAliasPath, indexFile)
+                if (fs.existsSync(filename)) {
+                  return filename
+                }
+              }
+            }
+            // if the path is complete filename
+            return resolvedTsAliasPath
+          } else {
+            // For cases a file extension is omitted when being imported
+            for (const ext of ['.ts', '.tsx', '.js', '.jsx']) {
+              const filename = resolvedTsAliasPath + ext
+              if (fs.existsSync(filename)) {
+                return filename
+              }
+            }
+          }
+        }
+        return undefined
+      })()
+    }
+
     if (!result) {
       debug('skipping an empty filepath resolution for partial: ' + dep);
       config.nonExistent.push(dep);
@@ -123,6 +174,7 @@ module.exports._getDependencies = function(config) {
     const exists = fs.existsSync(result);
 
     if (!exists) {
+
       config.nonExistent.push(dep);
       debug('skipping non-empty but non-existent resolution: ' + result + ' for partial: ' + dep);
       continue;
@@ -158,7 +210,7 @@ function traverse(config) {
   if (config.filter) {
     debug('using filter function to filter out dependencies');
     debug('unfiltered number of dependencies: ' + dependencies.length);
-    dependencies = dependencies.filter(function(filePath) {
+    dependencies = dependencies.filter(function (filePath) {
       return config.filter(filePath, config.filename);
     });
     debug('filtered number of dependencies: ' + dependencies.length);
