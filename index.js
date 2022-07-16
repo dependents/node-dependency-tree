@@ -50,7 +50,7 @@ module.exports = function(options) {
     tree = [{
       path: config.filename,
       children: results
-    }]
+    }];
   } else {
     debug('object form of results requested');
 
@@ -196,7 +196,7 @@ function traverse(config) {
         path: depPath,
         identifiers: d.identifiers,
         children: traverse(localConfig)
-      })
+      });
     } else {
       subTree[depPath] = traverse(localConfig);
     }
