@@ -123,7 +123,7 @@ module.exports._getDependencies = function(config) {
       noTypeDefinitions: config.noTypeDefinitions
     });
 
-    const resultDep = typeof dep === 'string' ? dep : {
+    const resultDep = typeof dep === 'string' ? result : {
       ...dep,
       path: result
     };
