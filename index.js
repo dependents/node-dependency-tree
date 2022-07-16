@@ -44,6 +44,13 @@ module.exports = function(options) {
     debug('list form of results requested');
 
     tree = Array.from(results);
+  } else if (config.identifiers) {
+    debug('identifiers form of results requested');
+
+    tree = [{
+      path: config.filename,
+      children: results
+    }]
   } else {
     debug('object form of results requested');
 
@@ -102,8 +109,10 @@ module.exports._getDependencies = function(config) {
   for (let i = 0, l = dependencies.length; i < l; i++) {
     const dep = dependencies[i];
 
+    const depPath = dep.path || dep;
+
     const result = cabinet({
-      partial: dep,
+      partial: depPath,
       filename: config.filename,
       directory: config.directory,
       ast: precinct.ast,
@@ -114,8 +123,13 @@ module.exports._getDependencies = function(config) {
       noTypeDefinitions: config.noTypeDefinitions
     });
 
+    const resultDep = typeof dep === 'string' ? dep : {
+      ...dep,
+      path: result
+    }
+
     if (!result) {
-      debug('skipping an empty filepath resolution for partial: ' + dep);
+      debug('skipping an empty filepath resolution for partial: ' + depPath);
       config.nonExistent.push(dep);
       continue;
     }
@@ -128,7 +142,7 @@ module.exports._getDependencies = function(config) {
       continue;
     }
 
-    resolvedDependencies.push(result);
+    resolvedDependencies.push(resultDep);
   }
 
   return resolvedDependencies;
@@ -139,7 +153,7 @@ module.exports._getDependencies = function(config) {
  * @return {Object|Set}
  */
 function traverse(config) {
-  let subTree = config.isListForm ? new Set() : {};
+  let subTree = config.isListForm ? new Set() : config.identifiers ? [] : {};
 
   debug('traversing ' + config.filename);
 
@@ -166,15 +180,25 @@ function traverse(config) {
 
   for (let i = 0, l = dependencies.length; i < l; i++) {
     const d = dependencies[i];
+
+    // If `identifiers: true` was passed, we'll get results objects with `path`, otherwise strings.
+    const depPath = d.path || d;
+
     const localConfig = config.clone();
-    localConfig.filename = d;
+    localConfig.filename = depPath;
 
     if (localConfig.isListForm) {
       for (let item of traverse(localConfig)) {
         subTree.add(item);
       }
+    } else if (localConfig.identifiers) {
+      subTree.push({
+        path: depPath,
+        identifiers: d.identifiers,
+        children: traverse(localConfig)
+      })
     } else {
-      subTree[d] = traverse(localConfig);
+      subTree[depPath] = traverse(localConfig);
     }
   }
 
