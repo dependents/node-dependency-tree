@@ -126,7 +126,7 @@ module.exports._getDependencies = function(config) {
     const resultDep = typeof dep === 'string' ? dep : {
       ...dep,
       path: result
-    }
+    };
 
     if (!result) {
       debug('skipping an empty filepath resolution for partial: ' + depPath);
