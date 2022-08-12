@@ -82,7 +82,6 @@ module.exports.toList = function(options = {}) {
  */
 module.exports._getDependencies = function(config = {}) {
   const precinctOptions = config.detectiveConfig;
-  precinctOptions.includeCore = false;
   let dependencies;
 
   try {
