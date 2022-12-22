@@ -49,7 +49,7 @@
     "esm": "^3.2.25",
     "jscs": "^3.0.7",
     "jscs-preset-mrjoelkemp": "~2.0.0",
-    "mocha": "^8.2.1",
+    "mocha": "^10.2.0",
     "mock-fs": "^4.13.0",
     "resolve": "^1.19.0",
     "rewire": "^5.0.0",
