@@ -49,6 +49,7 @@ var list = dependencyTree.toList({
 * `nonExistent`: array used for storing the list of partial paths that do not exist
 * `filter`: a function used to determine if a module (and its subtree) should be included in the dependency tree
  - The first argument given to the filter is an absolute filepath to the dependency and the second is the filepath to the currently traversed file. Should return a `Boolean`. If it returns `true`, the module is included in the resulting tree.
+* `verbose`: wether to return the tree as a nested list with additional data for each dependency
 * `detective`: object with configuration specific to detectives used to find dependencies of a file
   - for example `detective.amd.skipLazyLoaded: true` tells the AMD detective to omit inner requires
   - See [precinct's usage docs](https://github.com/dependents/node-precinct#usage) for the list of module types you can pass options to.
@@ -78,6 +79,40 @@ Example:
 
 This structure was chosen to serve as a visual representation of the dependency tree
 for use in the [Dependents](https://github.com/mrjoelkemp/sublime-dependents) plugin.
+
+Example using `verbose: true`:
+
+```js
+[{
+  resolved: '/Users/mrjoelkemp/Documents/node-dependency-tree/test/example/extended/a.js',
+  partial: './test/example/extended/a.js',
+  dependencies: [{
+    resolved: '/Users/mrjoelkemp/Documents/node-dependency-tree/test/example/extended/b.js',
+    partial: './test/example/extended/b.js',
+    dependencies: [{
+      resolved: '/Users/mrjoelkemp/Documents/node-dependency-tree/test/example/extended/d.js',
+      partial: 'test/example/extended/d.js',
+      dependencies: []
+    }, {
+      resolved: '/Users/mrjoelkemp/Documents/node-dependency-tree/test/example/extended/e.js',
+      partial: 'test/example/extended/e.js',
+      dependencies: []
+    }]
+  }, {
+    resolved: '/Users/mrjoelkemp/Documents/node-dependency-tree/test/example/extended/c.js',
+    partial: './test/example/extended/c.js',
+    dependencies: [{
+      resolved: '/Users/mrjoelkemp/Documents/node-dependency-tree/test/example/extended/f.js',
+      partial: 'test/example/extended/f.js',
+      dependencies: []
+    }, {
+      resolved: '/Users/mrjoelkemp/Documents/node-dependency-tree/test/example/extended/g.js',
+      partial: 'test/example/extended/g.js',
+      dependencies: []
+    }]
+  }
+}]
+```
 
 ##### CLI version
 

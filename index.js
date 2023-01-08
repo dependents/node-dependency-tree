@@ -21,6 +21,7 @@ const Config = require('./lib/Config');
  *                             Format is a filename -> tree as list lookup table
  * @param {Array} [options.nonExistent] - List of partials that do not exist
  * @param {Boolean} [options.isListForm=false]
+ * @param {Boolean} [options.verbose=false] Return a verbose tree in list form
  * @param {String|Object} [options.tsConfig] Path to a typescript config (or a preloaded one).
  * @param {Boolean} [options.noTypeDefinitions] For TypeScript imports, whether to resolve to `*.js` instead of `*.d.ts`.
  * @return {Object}
@@ -30,7 +31,7 @@ module.exports = function(options) {
 
   if (!fs.existsSync(config.filename)) {
     debug('file ' + config.filename + ' does not exist');
-    return config.isListForm ? [] : {};
+    return config.isListForm || config.verbose ? [] : {};
   }
 
   const results = traverse(config);
@@ -44,6 +45,14 @@ module.exports = function(options) {
     debug('list form of results requested');
 
     tree = Array.from(results);
+  } else if (config.verbose) {
+    debug('verbose form of results requested');
+
+    tree = [{
+      resolved: config.filename,
+      partial: null,
+      dependencies: results,
+    }];
   } else {
     debug('object form of results requested');
 
@@ -128,7 +137,11 @@ module.exports._getDependencies = function(config) {
       continue;
     }
 
-    resolvedDependencies.push(result);
+    if (config.verbose) {
+      resolvedDependencies.push({resolved: result, partial: dep});
+    } else {
+      resolvedDependencies.push(result);
+    }
   }
 
   return resolvedDependencies;
@@ -139,7 +152,14 @@ module.exports._getDependencies = function(config) {
  * @return {Object|Set}
  */
 function traverse(config) {
-  let subTree = config.isListForm ? new Set() : {};
+  let subTree;
+  if (config.isListForm) {
+    subTree = new Set();
+  } else if (config.verbose) {
+    subTree = [];
+  } else {
+    subTree = {};
+  }
 
   debug('traversing ' + config.filename);
 
@@ -153,7 +173,7 @@ function traverse(config) {
   debug('cabinet-resolved all dependencies: ', dependencies);
   // Prevents cycles by eagerly marking the current file as read
   // so that any dependent dependencies exit
-  config.visited[config.filename] = config.isListForm ? [] : {};
+  config.visited[config.filename] = config.isListForm || config.verbose ? [] : {};
 
   if (config.filter) {
     debug('using filter function to filter out dependencies');
@@ -166,21 +186,27 @@ function traverse(config) {
 
   for (let i = 0, l = dependencies.length; i < l; i++) {
     const d = dependencies[i];
+    const resolved = config.verbose ? d.resolved : d;
     const localConfig = config.clone();
-    localConfig.filename = d;
+    localConfig.filename = resolved;
 
     if (localConfig.isListForm) {
       for (let item of traverse(localConfig)) {
         subTree.add(item);
       }
+    } else if (localConfig.verbose) {
+      d.dependencies = traverse(localConfig);
+      subTree.push(d);
     } else {
-      subTree[d] = traverse(localConfig);
+      subTree[resolved] = traverse(localConfig);
     }
   }
 
   if (config.isListForm) {
     subTree.add(config.filename);
     config.visited[config.filename].push(...subTree);
+  } else if (config.verbose) {
+    config.visited[config.filename] = subTree;
   } else {
     config.visited[config.filename] = subTree;
   }
