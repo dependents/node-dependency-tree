@@ -1,0 +1,8 @@
+{
+  "check-leaks": false,
+  "timeout": 10000,
+  "throw-deprecation": true,
+  "trace-deprecation": true,
+  "trace-warnings": true,
+  "use-strict": false
+}
