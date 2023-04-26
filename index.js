@@ -1,7 +1,7 @@
 'use strict';
 
-const fs = require('fs');
-const { debuglog } = require('util');
+const fs = require('node:fs');
+const { debuglog } = require('node:util');
 const cabinet = require('filing-cabinet');
 const precinct = require('precinct');
 const Config = require('./lib/config.js');
@@ -34,7 +34,7 @@ module.exports = function(options = {}) {
     return config.isListForm ? [] : {};
   }
 
-  const results = traverse(config);
+  const results = module.exports._traverse(config);
   debug('traversal complete', results);
 
   dedupeNonExistent(config.nonExistent);
@@ -133,7 +133,7 @@ module.exports._getDependencies = function(config = {}) {
  * @param  {Config} config
  * @return {Object|Set}
  */
-function traverse(config = {}) {
+module.exports._traverse = function(config = {}) {
   const subTree = config.isListForm ? new Set() : {};
 
   debug(`traversing ${config.filename}`);
@@ -163,11 +163,11 @@ function traverse(config = {}) {
     localConfig.filename = dep;
 
     if (localConfig.isListForm) {
-      for (const item of traverse(localConfig)) {
+      for (const item of module.exports._traverse(localConfig)) {
         subTree.add(item);
       }
     } else {
-      subTree[dep] = traverse(localConfig);
+      subTree[dep] = module.exports._traverse(localConfig);
     }
   }
 
@@ -179,7 +179,7 @@ function traverse(config = {}) {
   }
 
   return subTree;
-}
+};
 
 // Mutate the list input to do a dereferenced modification of the user-supplied list
 function dedupeNonExistent(nonExistent) {

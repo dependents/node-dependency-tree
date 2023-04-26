@@ -14,7 +14,7 @@
   "scripts": {
     "lint": "xo",
     "fix": "xo --fix",
-    "mocha": "mocha --require esm",
+    "mocha": "mocha",
     "test": "npm run lint && npm run mocha",
     "test:ci": "c8 npm run mocha"
   },
@@ -55,12 +55,9 @@
   "devDependencies": {
     "c8": "^7.13.0",
     "debug": "^4.3.4",
-    "eslint": "^8.39.0",
-    "esm": "^3.2.25",
-    "mocha": "^8.4.0",
+    "mocha": "^10.2.0",
     "mock-fs": "^5.2.0",
     "resolve": "^1.22.3",
-    "rewire": "^6.0.0",
     "sinon": "^15.0.4",
     "xo": "^0.54.2"
   },
@@ -99,7 +96,6 @@
         "never"
       ],
       "unicorn/prefer-module": "off",
-      "unicorn/prefer-node-protocol": "off",
       "unicorn/prefer-top-level-await": "off",
       "unicorn/prevent-abbreviations": "off"
     },

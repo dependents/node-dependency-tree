@@ -1,13 +1,16 @@
-import { strict as assert } from 'assert';
-import path from 'path';
-import process from 'process';
-import sinon from 'sinon';
+import { strict as assert } from 'node:assert';
+import path from 'node:path';
+import process from 'node:process';
+import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import mockfs from 'mock-fs';
 import precinct from 'precinct';
-import rewire from 'rewire';
+import sinon from 'sinon';
 import Config from '../lib/config.js';
+import dependencyTree from '../index.js';
 
-const dependencyTree = rewire('..');
+const require = createRequire(import.meta.url);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 describe('dependencyTree', () => {
   function testTreesForFormat(format, ext = '.js') {
@@ -324,11 +327,11 @@ describe('dependencyTree', () => {
   describe('throws', () => {
     beforeEach(function() {
       this._directory = path.join(__dirname, '/fixtures/commonjs');
-      this._revert = dependencyTree.__set__('traverse', () => []);
+      this._revert = sinon.stub(dependencyTree, '_traverse').returns(() => []);
     });
 
     afterEach(function() {
-      this._revert();
+      this._revert.restore();
     });
 
     it('throws if the filename is missing', () => {
