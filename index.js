@@ -34,7 +34,7 @@ module.exports = function(options = {}) {
     return config.isListForm ? [] : {};
   }
 
-  const results = module.exports._traverse(config);
+  const results = traverse(config);
   debug('traversal complete', results);
 
   dedupeNonExistent(config.nonExistent);
@@ -133,7 +133,7 @@ module.exports._getDependencies = function(config = {}) {
  * @param  {Config} config
  * @return {Object|Set}
  */
-module.exports._traverse = function(config = {}) {
+function traverse(config = {}) {
   const subTree = config.isListForm ? new Set() : {};
 
   debug(`traversing ${config.filename}`);
@@ -163,11 +163,11 @@ module.exports._traverse = function(config = {}) {
     localConfig.filename = dep;
 
     if (localConfig.isListForm) {
-      for (const item of module.exports._traverse(localConfig)) {
+      for (const item of traverse(localConfig)) {
         subTree.add(item);
       }
     } else {
-      subTree[dep] = module.exports._traverse(localConfig);
+      subTree[dep] = traverse(localConfig);
     }
   }
 
@@ -179,7 +179,7 @@ module.exports._traverse = function(config = {}) {
   }
 
   return subTree;
-};
+}
 
 // Mutate the list input to do a dereferenced modification of the user-supplied list
 function dedupeNonExistent(nonExistent) {

@@ -327,11 +327,6 @@ describe('dependencyTree', () => {
   describe('throws', () => {
     beforeEach(function() {
       this._directory = path.join(__dirname, '/fixtures/commonjs');
-      this._revert = sinon.stub(dependencyTree, '_traverse').returns(() => []);
-    });
-
-    afterEach(function() {
-      this._revert.restore();
     });
 
     it('throws if the filename is missing', () => {
