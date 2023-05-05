@@ -1,22 +1,28 @@
-### dependency-tree [![npm](http://img.shields.io/npm/v/dependency-tree.svg)](https://npmjs.org/package/dependency-tree) [![npm](http://img.shields.io/npm/dm/dependency-tree.svg)](https://npmjs.org/package/dependency-tree)
+# dependency-tree
+
+[![CI](https://img.shields.io/github/actions/workflow/status/dependents/node-dependency-tree/ci.yml?branch=main&label=CI&logo=github)](https://github.com/dependents/node-dependency-tree/actions/workflows/ci.yml?query=branch%3Amain)
+[![npm version](https://img.shields.io/npm/v/dependency-tree?logo=npm&logoColor=fff)](https://www.npmjs.com/package/dependency-tree)
+[![npm downloads](https://img.shields.io/npm/dm/dependency-tree)](https://www.npmjs.com/package/dependency-tree)
 
 > Get the dependency tree of a module
 
-`npm install --save dependency-tree`
+```sh
+npm install dependency-tree
+```
 
-* Works for JS (AMD, CommonJS, ES6 modules), Typescript, and CSS preprocessors (CSS (PostCSS), Sass, Stylus, and Less); basically, any module type supported by [Precinct](https://github.com/mrjoelkemp/node-precinct).
+* Works for JS (AMD, CommonJS, ES6 modules), Typescript, and CSS preprocessors (CSS (PostCSS), Sass, Stylus, and Less); basically, any module type supported by [Precinct](https://github.com/dependents/node-precinct).
   - For CommonJS modules, 3rd party dependencies (npm installed dependencies) are included in the tree by default
-  - Dependency path resolutions are handled by [filing-cabinet](https://github.com/mrjoelkemp/node-filing-cabinet)
+  - Dependency path resolutions are handled by [filing-cabinet](https://github.com/dependents/node-filing-cabinet)
   - Supports RequireJS and Webpack loaders
 * All core Node modules (assert, path, fs, etc) are removed from the dependency list by default
 
-### Usage
+## Usage
 
 ```js
-var dependencyTree = require('dependency-tree');
+const dependencyTree = require('dependency-tree');
 
 // Returns a dependency tree object for the given file
-var tree = dependencyTree({
+const tree = dependencyTree({
   filename: 'path/to/a/file',
   directory: 'path/to/all/files',
   requireConfig: 'path/to/requirejs/config', // optional
@@ -33,13 +39,13 @@ var tree = dependencyTree({
 // Returns a post-order traversal (list form) of the tree with duplicate sub-trees pruned.
 // This is useful for bundling source files, because the list gives the concatenation order.
 // Note: you can pass the same arguments as you would to dependencyTree()
-var list = dependencyTree.toList({
+const list = dependencyTree.toList({
   filename: 'path/to/a/file',
   directory: 'path/to/all/files'
 });
 ```
 
-#### Options
+### Options
 
 * `requireConfig`: path to a requirejs config for AMD modules (allows for the result of aliased module paths)
 * `webpackConfig`: path to a webpack config for aliased modules
@@ -54,7 +60,7 @@ var list = dependencyTree.toList({
   - See [precinct's usage docs](https://github.com/dependents/node-precinct#usage) for the list of module types you can pass options to.
 * `noTypeDefinitions`: For TypeScript imports, whether to resolve to `*.js` instead of `*.d.ts`.
 
-#### Format Details
+### Format Details
 
 The object form is a mapping of the dependency tree to the filesystem –
 where every key is an absolute filepath and the value is another object/subtree.
@@ -79,7 +85,7 @@ Example:
 This structure was chosen to serve as a visual representation of the dependency tree
 for use in the [Dependents](https://github.com/mrjoelkemp/sublime-dependents) plugin.
 
-##### CLI version
+### CLI version
 
 * Assumes a global install: `npm install -g dependency-tree`
 
@@ -91,9 +97,9 @@ Prints the dependency tree of the given filename as stringified json (by default
 
 * You can alternatively print out the list form one element per line using the `--list-form` option.
 
-### How does this work?
+## How does this work?
 
-Dependency tree takes in a starting file, extracts its declared dependencies via [precinct](https://github.com/dependents/node-precinct/), resolves each of those dependencies to a file on the filesystem via [filing-cabinet](https://github.com/dependents/node-filing-cabinet), then recursively performs those steps until there are no more dependencies to process. 
+Dependency tree takes in a starting file, extracts its declared dependencies via [precinct](https://github.com/dependents/node-precinct/), resolves each of those dependencies to a file on the filesystem via [filing-cabinet](https://github.com/dependents/node-filing-cabinet), then recursively performs those steps until there are no more dependencies to process.
 
 In more detail, the starting file is passed to precinct to extract dependencies. Dependency-tree doesn't care about how to extract dependencies, so it delegates that work to precinct: which is a multi-language dependency extractor; we'll focus on JavaScript tree generation for this example. To do the extraction, precinct delegates the abstract-syntax-tree (AST) generation to the default parser for [node-source-walk](https://github.com/dependents/node-source-walk). Precinct uses the AST to determine what type of JS module the file is (Commonjs, AMD, or ES6) and then delegates to the "detective" that's appropriate for that module type. The "detective" contains the logic for how to extract dependencies based on the module syntax format; i.e., the way dependencies are declared in commonjs is different than in AMD (which has 4 ways of doing that, for example).
 
@@ -105,13 +111,13 @@ So after the appropriate resolver finds the file on the filesystem, filing-cabin
 
 At the end of traversing every file (in a depth-first fashion), we have a fully populated dependency tree. :dancers:
 
-### FAQ
+## FAQ
 
-#### Why aren't some some dependencies being detected?
+### Why aren't some some dependencies being detected?
 
 If there are bugs in [precinct](https://github.com/dependents/node-precinct) or if the `requireConfig`/`webpackConfig`/`tsConfig` options are incomplete,
 some dependencies may not be resolved. The optional array passed to the `nonExistent` option will be populated with paths
 that could not be resolved. You can check this array to see where problems might exist.
 
-You can also use the `DEBUG=*` env variable along with the cli version to see debugging information explaining where resolution went wrong.
-Example: `DEBUG=* dependency-tree -w path/to/webpack.config.json path/to/a/file`
+You can also use the `NODE_DEBUG=*` env variable along with the cli version to see debugging information explaining where resolution went wrong.
+Example: `NODE_DEBUG=* dependency-tree -w path/to/webpack.config.json path/to/a/file`
