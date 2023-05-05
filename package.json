@@ -47,9 +47,9 @@
     "node": ">=14"
   },
   "dependencies": {
-    "commander": "^9.5.0",
-    "filing-cabinet": "^3.3.1",
-    "precinct": "^10.0.1",
+    "commander": "^10.0.1",
+    "filing-cabinet": "^4.1.0",
+    "precinct": "^11.0.0",
     "typescript": "^5.0.4"
   },
   "devDependencies": {
