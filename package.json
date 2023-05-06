@@ -5,6 +5,7 @@
   "main": "index.js",
   "types": "index.d.ts",
   "files": [
+    "lib",
     "bin/cli.js",
     "index.js"
   ],
