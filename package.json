@@ -6,6 +6,7 @@
   "types": "index.d.ts",
   "files": [
     "bin/cli.js",
+    "lib/*.js",
     "index.js"
   ],
   "bin": {
