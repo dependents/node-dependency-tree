@@ -1,3 +1,5 @@
+/* eslint-env mocha */
+
 import { strict as assert } from 'node:assert';
 import path from 'node:path';
 import process from 'node:process';
