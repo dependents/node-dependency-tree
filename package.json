@@ -7,6 +7,7 @@
   "files": [
     "bin/cli.js",
     "lib/*.js",
+    "index.d.ts",
     "index.js"
   ],
   "bin": {
