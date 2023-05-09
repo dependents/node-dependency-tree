@@ -81,11 +81,10 @@ module.exports.toList = function(options = {}) {
  * @return {Array}
  */
 module.exports._getDependencies = function(config = {}) {
-  const precinctOptions = config.detectiveConfig;
   let dependencies;
 
   try {
-    dependencies = precinct.paperwork(config.filename, precinctOptions);
+    dependencies = precinct.paperwork(config.filename, config.detectiveConfig);
     debug(`extracted ${dependencies.length} dependencies: `, dependencies);
   } catch (error) {
     debug(`error getting dependencies: ${error.message}`);
