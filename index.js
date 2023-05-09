@@ -181,7 +181,7 @@ function traverse(config = {}, params = {}) {
         subTree.add(item);
       }
     } else {
-      subTree[d] = traverse(localConfig, newParams);
+      subTree[dep] = traverse(localConfig, newParams);
     }
   }
 
