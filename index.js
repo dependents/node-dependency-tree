@@ -1,11 +1,12 @@
 'use strict';
 
-const precinct = require('precinct');
-const path = require('path');
-const fs = require('fs');
+const fs = require('node:fs');
+const { debuglog } = require('node:util');
 const cabinet = require('filing-cabinet');
-const debug = require('debug')('tree');
-const Config = require('./lib/Config');
+const precinct = require('precinct');
+const Config = require('./lib/config.js');
+
+const debug = debuglog('tree');
 
 /**
  * Recursively find all dependencies (avoiding circular) traversing the entire dependency tree
@@ -18,18 +19,18 @@ const Config = require('./lib/Config');
  * @param {String} [options.webpackConfig] - The path to a webpack config
  * @param {String} [options.nodeModulesConfig] - config for resolving entry file for node_modules
  * @param {Object} [options.visited] - Cache of visited, absolutely pathed files that should not be reprocessed.
- *                             Format is a filename -> tree as list lookup table
+ *                                     Format is a filename -> tree as list lookup table
  * @param {Array} [options.nonExistent] - List of partials that do not exist
  * @param {Boolean} [options.isListForm=false]
  * @param {String|Object} [options.tsConfig] Path to a typescript config (or a preloaded one).
  * @param {Boolean} [options.noTypeDefinitions] For TypeScript imports, whether to resolve to `*.js` instead of `*.d.ts`.
  * @return {Object}
  */
-module.exports = function(options) {
+module.exports = function(options = {}) {
   const config = new Config(options);
 
   if (!fs.existsSync(config.filename)) {
-    debug('file ' + config.filename + ' does not exist');
+    debug(`file ${config.filename} does not exist`);
     return config.isListForm ? [] : {};
   }
 
@@ -46,11 +47,9 @@ module.exports = function(options) {
   let tree;
   if (config.isListForm) {
     debug('list form of results requested');
-
-    tree = Array.from(results);
+    tree = [...results];
   } else {
     debug('object form of results requested');
-
     tree = {};
     tree[config.filename] = results;
   }
@@ -71,7 +70,7 @@ module.exports = function(options) {
  *
  * Params are those of module.exports
  */
-module.exports.toList = function(options) {
+module.exports.toList = function(options = {}) {
   options.isListForm = true;
 
   return module.exports(options);
@@ -85,28 +84,24 @@ module.exports.toList = function(options) {
  * @param  {Config} config
  * @return {Array}
  */
-module.exports._getDependencies = function(config, params) {
-  let dependencies;
+module.exports._getDependencies = function(config = {}, params = {}) {
   const precinctOptions = config.detectiveConfig;
   precinctOptions.includeCore = false;
   precinctOptions.treePath = params.treePath;
+  let dependencies;
 
   try {
     dependencies = precinct.paperwork(config.filename, precinctOptions);
-
-    debug('extracted ' + dependencies.length + ' dependencies: ', dependencies);
-
-  } catch (e) {
-    debug('error getting dependencies: ' + e.message);
-    debug(e.stack);
+    debug(`extracted ${dependencies.length} dependencies: `, dependencies);
+  } catch (error) {
+    debug(`error getting dependencies: ${error.message}`);
+    debug(error.stack);
     return [];
   }
 
   const resolvedDependencies = [];
 
-  for (let i = 0, l = dependencies.length; i < l; i++) {
-    const dep = dependencies[i];
-
+  for (const dep of dependencies) {
     const result = cabinet({
       partial: dep,
       filename: config.filename,
@@ -120,7 +115,7 @@ module.exports._getDependencies = function(config, params) {
     });
 
     if (!result) {
-      debug('skipping an empty filepath resolution for partial: ' + dep);
+      debug(`skipping an empty filepath resolution for partial: ${dep}`);
       config.nonExistent.push(dep);
       continue;
     }
@@ -129,7 +124,7 @@ module.exports._getDependencies = function(config, params) {
 
     if (!exists) {
       config.nonExistent.push(dep);
-      debug('skipping non-empty but non-existent resolution: ' + result + ' for partial: ' + dep);
+      debug(`skipping non-empty but non-existent resolution: ${result} for partial: ${dep}`);
       continue;
     }
 
@@ -144,13 +139,13 @@ module.exports._getDependencies = function(config, params) {
  * @param  {Object} params
  * @return {Object|Set}
  */
-function traverse(config, params) {
-  let subTree = config.isListForm ? new Set() : {};
+function traverse(config = {}, params = {}) {
+  const subTree = config.isListForm ? new Set() : {};
 
-  debug('traversing ' + config.filename);
+  debug(`traversing ${config.filename}`);
 
   if (config.visited[config.filename]) {
-    debug('already visited ' + config.filename);
+    debug(`already visited ${config.filename}`);
     return config.visited[config.filename];
   }
 
@@ -163,25 +158,26 @@ function traverse(config, params) {
 
   if (config.filter) {
     debug('using filter function to filter out dependencies');
-    debug('unfiltered number of dependencies: ' + dependencies.length);
-    dependencies = dependencies.filter(function(filePath) {
-      return config.filter(filePath, config.filename);
-    });
-    debug('filtered number of dependencies: ' + dependencies.length);
+    debug(`unfiltered number of dependencies: ${dependencies.length}`);
+    // eslint-disable-next-line unicorn/no-array-method-this-argument, unicorn/no-array-callback-reference
+    dependencies = dependencies.filter(filePath => config.filter(filePath, config.filename));
+    debug(`filtered number of dependencies: ${dependencies.length}`);
   }
 
-  for (let i = 0, l = dependencies.length; i < l; i++) {
-    const d = dependencies[i];
+  for (const dep of dependencies) {
     const localConfig = config.clone();
-    localConfig.filename = d;
+    localConfig.filename = dep;
 
     const newParams = {
       ...params,
-      treePath: [...(params.treePath ? params.treePath : []), config.filename]
+      treePath: [
+        ...(params.treePath ? params.treePath : []),
+        config.filename
+      ]
     };
 
     if (localConfig.isListForm) {
-      for (let item of traverse(localConfig, newParams)) {
+      for (const item of traverse(localConfig, newParams)) {
         subTree.add(item);
       }
     } else {
