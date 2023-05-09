@@ -171,7 +171,7 @@ function traverse(config = {}, params = {}) {
     const newParams = {
       ...params,
       treePath: [
-        ...(params.treePath ? params.treePath : []),
+        ...(params.treePath ?? []),
         config.filename
       ]
     };
