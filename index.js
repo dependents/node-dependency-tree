@@ -186,9 +186,7 @@ function dedupeNonExistent(nonExistent) {
   const deduped = new Set(nonExistent);
   nonExistent.length = deduped.size;
 
-  let i = 0;
-  for (const elem of deduped) {
+  for (const { elem, i } of Object.entries(deduped)) {
     nonExistent[i] = elem;
-    i++;
   }
 }
