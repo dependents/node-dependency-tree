@@ -50,8 +50,8 @@
   },
   "dependencies": {
     "commander": "^10.0.1",
-    "filing-cabinet": "^4.1.5",
-    "precinct": "^11.0.4",
+    "filing-cabinet": "^4.1.6",
+    "precinct": "^11.0.5",
     "typescript": "^5.0.4"
   },
   "devDependencies": {
@@ -60,7 +60,7 @@
     "mocha": "^10.2.0",
     "mock-fs": "^5.2.0",
     "resolve": "^1.22.3",
-    "sinon": "^15.0.4",
+    "sinon": "^15.1.0",
     "xo": "^0.54.2"
   },
   "xo": {
