@@ -160,7 +160,7 @@ describe('dependencyTree', () => {
     dependencyTree._getDependencies.restore();
   });
 
-  it('excludes Nodejs core modules by default', () => {
+  it('excludes Node.js core modules by default', () => {
     const directory = path.join(__dirname, '/fixtures/commonjs');
     const filename = path.normalize(`${directory}/b.js`);
 
