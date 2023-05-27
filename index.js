@@ -96,9 +96,9 @@ module.exports._getDependencies = function(config = {}) {
 
   const resolvedDependencies = [];
 
-  for (const dep of dependencies) {
+  for (const dependency of dependencies) {
     const result = cabinet({
-      partial: dep,
+      partial: dependency,
       filename: config.filename,
       directory: config.directory,
       ast: precinct.ast,
@@ -111,16 +111,16 @@ module.exports._getDependencies = function(config = {}) {
     });
 
     if (!result) {
-      debug(`skipping an empty filepath resolution for partial: ${dep}`);
-      config.nonExistent.push(dep);
+      debug(`skipping an empty filepath resolution for partial: ${dependency}`);
+      config.nonExistent.push(dependency);
       continue;
     }
 
     const exists = fs.existsSync(result);
 
     if (!exists) {
-      config.nonExistent.push(dep);
-      debug(`skipping non-empty but non-existent resolution: ${result} for partial: ${dep}`);
+      config.nonExistent.push(dependency);
+      debug(`skipping non-empty but non-existent resolution: ${result} for partial: ${dependency}`);
       continue;
     }
 
@@ -159,16 +159,16 @@ function traverse(config = {}) {
     debug(`filtered number of dependencies: ${dependencies.length}`);
   }
 
-  for (const dep of dependencies) {
+  for (const dependency of dependencies) {
     const localConfig = config.clone();
-    localConfig.filename = dep;
+    localConfig.filename = dependency;
 
     if (localConfig.isListForm) {
       for (const item of traverse(localConfig)) {
         subTree.add(item);
       }
     } else {
-      subTree[dep] = traverse(localConfig);
+      subTree[dependency] = traverse(localConfig);
     }
   }
 
@@ -187,7 +187,9 @@ function dedupeNonExistent(nonExistent) {
   const deduped = new Set(nonExistent);
   nonExistent.length = deduped.size;
 
-  for (const { elem, i } of Object.entries(deduped)) {
+  let i = 0;
+  for (const elem of deduped) {
     nonExistent[i] = elem;
+    i++;
   }
 }
