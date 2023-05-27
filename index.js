@@ -34,7 +34,11 @@ module.exports = function(options = {}) {
     return config.isListForm ? [] : {};
   }
 
-  const results = traverse(config);
+  const params = {
+    treePath: []
+  };
+
+  const results = traverse(config, params);
   debug('traversal complete', results);
 
   dedupeNonExistent(config.nonExistent);
@@ -80,9 +84,10 @@ module.exports.toList = function(options = {}) {
  * @param  {Config} config
  * @return {Array}
  */
-module.exports._getDependencies = function(config = {}) {
+module.exports._getDependencies = function(config = {}, params = {}) {
   const precinctOptions = config.detectiveConfig;
   precinctOptions.includeCore = false;
+  precinctOptions.treePath = params.treePath;
   let dependencies;
 
   try {
@@ -131,9 +136,10 @@ module.exports._getDependencies = function(config = {}) {
 
 /**
  * @param  {Config} config
+ * @param  {Object} params
  * @return {Object|Set}
  */
-function traverse(config = {}) {
+function traverse(config = {}, params = {}) {
   const subTree = config.isListForm ? new Set() : {};
 
   debug(`traversing ${config.filename}`);
@@ -143,7 +149,7 @@ function traverse(config = {}) {
     return config.visited[config.filename];
   }
 
-  let dependencies = module.exports._getDependencies(config);
+  let dependencies = module.exports._getDependencies(config, params);
 
   debug('cabinet-resolved all dependencies: ', dependencies);
   // Prevents cycles by eagerly marking the current file as read
@@ -162,12 +168,20 @@ function traverse(config = {}) {
     const localConfig = config.clone();
     localConfig.filename = dep;
 
+    const newParams = {
+      ...params,
+      treePath: [
+        ...(params.treePath ?? []),
+        config.filename
+      ]
+    };
+
     if (localConfig.isListForm) {
-      for (const item of traverse(localConfig)) {
+      for (const item of traverse(localConfig, newParams)) {
         subTree.add(item);
       }
     } else {
-      subTree[dep] = traverse(localConfig);
+      subTree[dep] = traverse(localConfig, newParams);
     }
   }
 
