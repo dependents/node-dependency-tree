@@ -1,6 +1,7 @@
 'use strict';
 
 const fs = require('node:fs');
+const path = require('node:path');
 const { debuglog } = require('node:util');
 const cabinet = require('filing-cabinet');
 const precinct = require('precinct');
@@ -161,6 +162,7 @@ function traverse(config = {}) {
   for (const dependency of dependencies) {
     const localConfig = config.clone();
     localConfig.filename = dependency;
+    localConfig.directory = getDirectory(localConfig);
 
     if (localConfig.isListForm) {
       for (const item of traverse(localConfig)) {
@@ -191,4 +193,27 @@ function dedupeNonExistent(nonExistent) {
     nonExistent[i] = elem;
     i++;
   }
+}
+
+//If the file is in a node module, use the root directory of the module
+function getDirectory(localConfig){
+  function _getProjectPath(filename) {
+      try{
+        const nodeModuleParts = filename.split('node_modules')
+        const packageSubPathPath = nodeModuleParts.pop().split(path.sep).filter(function(v){ return !!v})
+        const packageName = packageSubPathPath[0].startsWith("@") ? `${packageSubPathPath[0]}${path.sep}${packageSubPathPath[1]}` :  packageSubPathPath[0]
+
+        return path.join(...nodeModuleParts, 'node_modules', packageName)
+      }
+      catch(err){
+        debug(`Could not determine the root directory of package file ${filename}. Using default`);
+        return null
+      }
+  }
+
+  if (!localConfig.filename.includes('node_modules')){
+    return localConfig.directory
+  }
+
+  return _getProjectPath(path.dirname(localConfig.filename)) || localConfig.directory
 }
