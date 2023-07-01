@@ -472,7 +472,7 @@ describe('dependencyTree', () => {
     });
   });
 
-  describe("It uses package specific node_module directory when resolving package dependencies", () => {
+  describe('It uses package specific node_module directory when resolving package dependencies', () => {
     testTreesForFormat('commonjs');
 
     it('It can find sub package in node module package', () => {
@@ -480,13 +480,13 @@ describe('dependencyTree', () => {
         [path.join(__dirname, '/es6')]: {
           'module.entry.js': 'import * as module from "parent_module_a"',
           node_modules: { // eslint-disable-line camelcase
-            'parent_module_a': {
+            parent_module_a: { // eslint-disable-line camelcase
               'index.main.js': 'import * as child_module from "child_node_module"; module.exports = child_module;',
               'package.json': '{ "main": "index.main.js"}',
-              node_modules: {
-                child_node_module: {
+              node_modules: { // eslint-disable-line camelcase
+                child_node_module: { // eslint-disable-line camelcase
                   'index.main.js': 'module.exports = "child_node_module_of_parent_a"',
-                  'package.json': '{ "main": "index.main.js"}',
+                  'package.json': '{ "main": "index.main.js"}'
                 }
               }
             }
@@ -506,23 +506,22 @@ describe('dependencyTree', () => {
       assert.ok(treeList.includes(path.normalize(`${directory}/node_modules/parent_module_a/node_modules/child_node_module/index.main.js`)));
     });
 
-
     it('it usues correct version of sub package in node module package', () => {
       mockfs({
         [path.join(__dirname, '/es6')]: {
           'module.entry.js': 'import * as module from "parent_module_a"',
           node_modules: { // eslint-disable-line camelcase
-            child_node_module: {
+            child_node_module: { // eslint-disable-line camelcase
               'index.main.js': 'module.exports = "child_node_module"',
-              'package.json': '{ "main": "index.main.js", "version": "2.0.0"}',
+              'package.json': '{ "main": "index.main.js", "version": "2.0.0"}'
             },
-            parent_module_a: {
+            parent_module_a: { // eslint-disable-line camelcase
               'index.main.js': 'import * as child_module from "child_node_module"; module.exports = child_module;',
               'package.json': '{ "main": "index.main.js"}',
-              node_modules: {
-                child_node_module: {
+              node_modules: { // eslint-disable-line camelcase
+                child_node_module: { // eslint-disable-line camelcase
                   'index.main.js': 'module.exports = "child_node_module_of_parent_a"',
-                  'package.json': '{ "main": "index.main.js", "version": "1.0.0"}',
+                  'package.json': '{ "main": "index.main.js", "version": "1.0.0"}'
                 }
               }
             }
@@ -541,10 +540,9 @@ describe('dependencyTree', () => {
 
       assert.ok(!treeList.includes(path.normalize(`${directory}/node_modules/child_node_module/index.main.js`)));
       assert.ok(treeList.includes(path.normalize(`${directory}/node_modules/parent_module_a/node_modules/child_node_module/index.main.js`)));
-
     });
-  })
-  
+  });
+
   describe('module formats', () => {
     describe('amd', () => {
       testTreesForFormat('amd');
