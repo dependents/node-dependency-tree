@@ -203,7 +203,7 @@ function getDirectory(localConfig) {
       const packageSubPathPath = nodeModuleParts.pop().split(path.sep).filter(Boolean);
       const packageName = packageSubPathPath[0].startsWith('@') ? `${packageSubPathPath[0]}${path.sep}${packageSubPathPath[1]}` : packageSubPathPath[0];
 
-      return path.join(...nodeModuleParts, 'node_modules', packageName);
+      return path.normalize([...nodeModuleParts, `${path.sep}${packageName}`].join('node_modules'));
     } catch {
       debug(`Could not determine the root directory of package file ${filename}. Using default`);
       return null;
