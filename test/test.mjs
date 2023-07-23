@@ -479,12 +479,12 @@ describe('dependencyTree', () => {
       mockfs({
         [path.join(__dirname, '/es6')]: {
           'module.entry.js': 'import * as module from "parent_module_a"',
-          node_modules: { // eslint-disable-line camelcase
-            parent_module_a: { // eslint-disable-line camelcase
+          node_modules: {
+            parent_module_a: {
               'index.main.js': 'import * as child_module from "child_node_module"; module.exports = child_module;',
               'package.json': '{ "main": "index.main.js"}',
-              node_modules: { // eslint-disable-line camelcase
-                child_node_module: { // eslint-disable-line camelcase
+              node_modules: {
+                child_node_module: {
                   'index.main.js': 'module.exports = "child_node_module_of_parent_a"',
                   'package.json': '{ "main": "index.main.js"}'
                 }
@@ -510,16 +510,16 @@ describe('dependencyTree', () => {
       mockfs({
         [path.join(__dirname, '/es6')]: {
           'module.entry.js': 'import * as module from "parent_module_a"',
-          node_modules: { // eslint-disable-line camelcase
-            child_node_module: { // eslint-disable-line camelcase
+          node_modules: {
+            child_node_module: {
               'index.main.js': 'module.exports = "child_node_module"',
               'package.json': '{ "main": "index.main.js", "version": "2.0.0"}'
             },
-            parent_module_a: { // eslint-disable-line camelcase
+            parent_module_a: {
               'index.main.js': 'import * as child_module from "child_node_module"; module.exports = child_module;',
               'package.json': '{ "main": "index.main.js"}',
-              node_modules: { // eslint-disable-line camelcase
-                child_node_module: { // eslint-disable-line camelcase
+              node_modules: {
+                child_node_module: {
                   'index.main.js': 'module.exports = "child_node_module_of_parent_a"',
                   'package.json': '{ "main": "index.main.js", "version": "1.0.0"}'
                 }
