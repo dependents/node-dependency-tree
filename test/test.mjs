@@ -506,7 +506,7 @@ describe('dependencyTree', () => {
           mockfs({
             [path.join(__dirname, '/es6')]: {
               'module.entry.js': 'import * as module from "module.entry"',
-              node_modules: { // eslint-disable-line camelcase
+              node_modules: {
                 'module.entry': {
                   'index.main.js': 'module.exports = function() {};',
                   'index.module.js': 'module.exports = function() {};',

@@ -71,6 +71,12 @@
     ],
     "rules": {
       "arrow-body-style": "off",
+      "camelcase": [
+        "error",
+        {
+          "properties": "never"
+        }
+      ],
       "capitalized-comments": "off",
       "comma-dangle": [
         "error",
