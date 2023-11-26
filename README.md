@@ -33,7 +33,9 @@ const tree = dependencyTree({
   }, // optional
   filter: path => path.indexOf('node_modules') === -1, // optional
   nonExistent: [], // optional
-  noTypeDefinitions: false // optional
+  noTypeDefinitions: false, // optional
+  includeCore: false, // optional, if true include node.js core modules (for example: "fs"), they will be prefixed with ':!EXISTS: '
+  includeNonExisting: false // optional, if true include unresolved dependencies, they will be prefixed with ':!EXISTS: '
 });
 
 // Returns a post-order traversal (list form) of the tree with duplicate sub-trees pruned.

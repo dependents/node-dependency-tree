@@ -82,7 +82,7 @@ module.exports.toList = function(options = {}) {
  */
 module.exports._getDependencies = function(config = {}) {
   const precinctOptions = config.detectiveConfig;
-  precinctOptions.includeCore = false;
+
   let dependencies;
 
   try {
@@ -112,6 +112,9 @@ module.exports._getDependencies = function(config = {}) {
     if (!result) {
       debug(`skipping an empty filepath resolution for partial: ${dependency}`);
       config.nonExistent.push(dependency);
+      if(config.includeNonExisting) {
+		    resolvedDependencies.push(":!EXISTS: " + dependency);
+		  }
       continue;
     }
 
@@ -120,6 +123,9 @@ module.exports._getDependencies = function(config = {}) {
     if (!exists) {
       config.nonExistent.push(dependency);
       debug(`skipping non-empty but non-existent resolution: ${result} for partial: ${dependency}`);
+      if(config.includeNonExisting) {
+		    resolvedDependencies.push(":!EXISTS: " + dependency);
+		  }
       continue;
     }
 
