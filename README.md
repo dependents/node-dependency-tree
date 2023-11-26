@@ -50,6 +50,7 @@ const list = dependencyTree.toList({
 * `requireConfig`: path to a requirejs config for AMD modules (allows for the result of aliased module paths)
 * `webpackConfig`: path to a webpack config for aliased modules
 * `tsConfig`: path to a typescript config (or a preloaded object representing the typescript config)
+* `tsConfigPath`: a (virtual) path to typescript config file when `tsConfig` option is given as an object, not a string. Needed to calculate [Path Mapping](https://www.typescriptlang.org/docs/handbook/module-resolution.html#path-mapping). If not given when `tsConfig` is an object, **Path Mapping** is ignored. This is not needed when `tsConfig` is given as a path string.
 * `nodeModulesConfig`: config for resolving entry file for node_modules
 * `visited`: object used for avoiding redundant subtree generations via memoization.
 * `nonExistent`: array used for storing the list of partial paths that do not exist
