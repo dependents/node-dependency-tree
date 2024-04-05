@@ -3,14 +3,13 @@ name: Lint
 on:
   push:
     branches:
-      - "**"
-      - "!dependabot/**"
+      - "main"
   pull_request:
   workflow_dispatch:
 
 env:
   FORCE_COLOR: 2
-  NODE: 18
+  NODE: 20
 
 permissions:
   contents: read
