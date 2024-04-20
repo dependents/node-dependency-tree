@@ -46,7 +46,7 @@
   },
   "homepage": "https://github.com/dependents/node-dependency-tree",
   "engines": {
-    "node": ">=14"
+    "node": ">=18"
   },
   "dependencies": {
     "commander": "^12.0.0",
