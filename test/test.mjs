@@ -186,7 +186,7 @@ describe('dependencyTree', () => {
     const tree = dependencyTree({ filename, directory });
 
     for (const node in tree.nodes) {
-      if (Object.prototype.hasOwnProperty.call(tree.nodes, node)) {
+      if (Object.hasOwn(tree.nodes, node)) {
         assert.ok(node.includes(process.cwd()));
       }
     }
@@ -409,7 +409,7 @@ describe('dependencyTree', () => {
         // Skip all 3rd party deps
         filter(filePath, moduleFile) {
           assert.ok(require.resolve('debug'));
-          assert.ok(moduleFile.replace(/\\/g, '/').match(path.normalize('test/fixtures/onlyRealDeps/a.js').replace(/\\/g, '/')));
+          assert.ok(moduleFile.replaceAll('\\', '/').match(path.normalize('test/fixtures/onlyRealDeps/a.js').replaceAll('\\', '/')));
           return !filePath.includes('node_modules');
         }
       });
@@ -506,7 +506,7 @@ describe('dependencyTree', () => {
           mockfs({
             [path.join(__dirname, '/es6')]: {
               'module.entry.js': 'import * as module from "module.entry"',
-              node_modules: { // eslint-disable-line camelcase
+              node_modules: {
                 'module.entry': {
                   'index.main.js': 'module.exports = function() {};',
                   'index.module.js': 'module.exports = function() {};',
@@ -787,7 +787,7 @@ describe('dependencyTree', () => {
       assert.equal(list.length, 3);
       assert.equal(path.normalize(list[0]), path.normalize(`${directory}/c.js`));
       assert.equal(path.normalize(list[1]), path.normalize(`${directory}/b.js`));
-      assert.equal(list[list.length - 1], filename);
+      assert.equal(list.at(-1), filename);
     });
 
     describe('module formats', () => {
@@ -906,8 +906,8 @@ describe('dependencyTree', () => {
       });
 
       const filename = path.resolve(process.cwd(), 'root/a.js');
-      const aliasedFile = path.resolve(process.cwd(), 'root/lodizzle.js').replace(/\\/g, '/');
-      const normalizedTreeFilename = Object.keys(tree[filename]).map(f => f.replace(/\\/g, '/'));
+      const aliasedFile = path.resolve(process.cwd(), 'root/lodizzle.js').replaceAll('\\', '/');
+      const normalizedTreeFilename = Object.keys(tree[filename]).map(f => f.replaceAll('\\', '/'));
       assert.ok(aliasedFile.includes(normalizedTreeFilename));
     });
 
@@ -919,8 +919,8 @@ describe('dependencyTree', () => {
       });
 
       const filename = path.resolve(process.cwd(), 'root/b.js');
-      const aliasedFile = path.resolve(process.cwd(), 'root/lodizzle.js').replace(/\\/g, '/');
-      const normalizedTreeFilename = Object.keys(tree[filename]).map(f => f.replace(/\\/g, '/'));
+      const aliasedFile = path.resolve(process.cwd(), 'root/lodizzle.js').replaceAll('\\', '/');
+      const normalizedTreeFilename = Object.keys(tree[filename]).map(f => f.replaceAll('\\', '/'));
       assert.ok(aliasedFile.includes(normalizedTreeFilename));
     });
   });
