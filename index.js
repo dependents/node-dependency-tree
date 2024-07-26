@@ -106,6 +106,7 @@ module.exports._getDependencies = function(config = {}) {
       webpackConfig: config.webpackConfig,
       nodeModulesConfig: config.nodeModulesConfig,
       tsConfig: config.tsConfig,
+      tsConfigPath: config.tsConfigPath,
       noTypeDefinitions: config.noTypeDefinitions
     });
 
