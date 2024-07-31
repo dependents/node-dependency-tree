@@ -964,6 +964,18 @@ describe('dependencyTree', () => {
 
         assert.equal(typeof config.tsConfig, 'object');
       });
+
+      it('includes the tsConfigPath so filing-cabinet can still resolve compilerOptions.paths correctly', () => {
+        const directory = path.join(__dirname, 'fixtures/ts');
+        const tsConfigPath = path.join(directory, '.tsconfig');
+        const config = new Config({
+          filename: 'foo',
+          directory: 'bar',
+          tsConfig: tsConfigPath
+        });
+
+        assert.equal(config.tsConfigPath, tsConfigPath);
+      });
     });
 
     describe('when cloning', () => {
