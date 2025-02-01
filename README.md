@@ -10,7 +10,7 @@
 npm install dependency-tree
 ```
 
-* Works for JS (AMD, CommonJS, ES6 modules), Typescript, and CSS preprocessors (CSS (PostCSS), Sass, Stylus, and Less); basically, any module type supported by [Precinct](https://github.com/dependents/node-precinct).
+* Works for JS (AMD, CommonJS, ES6 modules), TypeScript, and CSS preprocessors (CSS (PostCSS), Sass, Stylus, and Less); basically, any module type supported by [Precinct](https://github.com/dependents/node-precinct).
   - For CommonJS modules, 3rd party dependencies (npm installed dependencies) are included in the tree by default
   - Dependency path resolutions are handled by [filing-cabinet](https://github.com/dependents/node-filing-cabinet)
   - Supports RequireJS and Webpack loaders
