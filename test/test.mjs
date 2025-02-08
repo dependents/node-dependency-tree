@@ -472,10 +472,10 @@ describe('dependencyTree', () => {
     });
   });
 
-  describe('It uses package specific node_module directory when resolving package dependencies', () => {
+  describe('it uses package specific node_module directory when resolving package dependencies', () => {
     testTreesForFormat('commonjs');
 
-    it('It can find sub package in node module package', () => {
+    it('it can find sub package in node module package', () => {
       mockfs({
         [path.join(__dirname, '/es6')]: {
           'module.entry.js': 'import * as module from "parent_module_a"',
