@@ -198,22 +198,22 @@ function dedupeNonExistent(nonExistent) {
 
 // If the file is in a node module, use the root directory of the module
 function getDirectory(localConfig) {
-  function _getProjectPath(filename) {
-    try {
-      const nodeModuleParts = filename.split('node_modules');
-      const packageSubPathPath = nodeModuleParts.pop().split(path.sep).filter(Boolean);
-      const packageName = packageSubPathPath[0].startsWith('@') ? `${packageSubPathPath[0]}${path.sep}${packageSubPathPath[1]}` : packageSubPathPath[0];
-
-      return path.normalize([...nodeModuleParts, `${path.sep}${packageName}`].join('node_modules'));
-    } catch {
-      debug(`Could not determine the root directory of package file ${filename}. Using default`);
-      return null;
-    }
-  }
-
   if (!localConfig.filename.includes('node_modules')) {
     return localConfig.directory;
   }
 
-  return _getProjectPath(path.dirname(localConfig.filename)) || localConfig.directory;
+  return getProjectPath(path.dirname(localConfig.filename)) || localConfig.directory;
+}
+
+function getProjectPath(filename) {
+  try {
+    const nodeModuleParts = filename.split('node_modules');
+    const packageSubPathPath = nodeModuleParts.pop().split(path.sep).filter(Boolean);
+    const packageName = packageSubPathPath[0].startsWith('@') ? `${packageSubPathPath[0]}${path.sep}${packageSubPathPath[1]}` : packageSubPathPath[0];
+
+    return path.normalize([...nodeModuleParts, `${path.sep}${packageName}`].join('node_modules'));
+  } catch {
+    debug(`Could not determine the root directory of package file ${filename}. Using default`);
+    return null;
+  }
 }
