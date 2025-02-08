@@ -506,7 +506,7 @@ describe('dependencyTree', () => {
       assert.ok(treeList.includes(path.normalize(`${directory}/node_modules/parent_module_a/node_modules/child_node_module/index.main.js`)));
     });
 
-    it('it usues correct version of sub package in node module package', () => {
+    it('it uses correct version of sub package in node module package', () => {
       mockfs({
         [path.join(__dirname, '/es6')]: {
           'module.entry.js': 'import * as module from "parent_module_a"',
