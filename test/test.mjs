@@ -146,7 +146,7 @@ describe('dependencyTree', () => {
     const tree = dependencyTree({ filename, directory, includeNonExisting: true });
     const subTree = tree[filename];
 
-    assert.ok(Object.keys(subTree).includes( ':!EXISTS: not-real'));
+    assert.ok(Object.keys(subTree).includes(':!EXISTS: not-real'));
   });
 
   it('test includeCore=true', () => {
@@ -156,7 +156,7 @@ describe('dependencyTree', () => {
     const tree = dependencyTree({ filename, directory, includeCore: true });
     const subTree = tree[filename];
 
-    assert.ok(Object.keys(subTree).includes( ':!EXISTS: path'));
+    assert.ok(Object.keys(subTree).includes(':!EXISTS: path'));
   });
 
   it('does not choke on cyclic dependencies', () => {
