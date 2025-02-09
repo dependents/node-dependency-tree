@@ -160,7 +160,7 @@ describe('dependencyTree', () => {
     dependencyTree._getDependencies.restore();
   });
 
-  it('excludes Nodejs core modules by default', () => {
+  it('excludes Node.js core modules by default', () => {
     const directory = path.join(__dirname, '/fixtures/commonjs');
     const filename = path.normalize(`${directory}/b.js`);
 
@@ -186,7 +186,7 @@ describe('dependencyTree', () => {
     const tree = dependencyTree({ filename, directory });
 
     for (const node in tree.nodes) {
-      if (Object.prototype.hasOwnProperty.call(tree.nodes, node)) {
+      if (Object.hasOwn(tree.nodes, node)) {
         assert.ok(node.includes(process.cwd()));
       }
     }
@@ -409,7 +409,7 @@ describe('dependencyTree', () => {
         // Skip all 3rd party deps
         filter(filePath, moduleFile) {
           assert.ok(require.resolve('debug'));
-          assert.ok(moduleFile.replace(/\\/g, '/').match(path.normalize('test/fixtures/onlyRealDeps/a.js').replace(/\\/g, '/')));
+          assert.ok(moduleFile.replaceAll('\\', '/').match(path.normalize('test/fixtures/onlyRealDeps/a.js').replaceAll('\\', '/')));
           return !filePath.includes('node_modules');
         }
       });
@@ -472,6 +472,77 @@ describe('dependencyTree', () => {
     });
   });
 
+  describe('it uses package specific node_module directory when resolving package dependencies', () => {
+    testTreesForFormat('commonjs');
+
+    it('it can find sub package in node module package', () => {
+      mockfs({
+        [path.join(__dirname, '/es6')]: {
+          'module.entry.js': 'import * as module from "parent_module_a"',
+          node_modules: {
+            parent_module_a: {
+              'index.main.js': 'import * as child_module from "child_node_module"; module.exports = child_module;',
+              'package.json': '{ "main": "index.main.js"}',
+              node_modules: {
+                child_node_module: {
+                  'index.main.js': 'module.exports = "child_node_module_of_parent_a"',
+                  'package.json': '{ "main": "index.main.js"}'
+                }
+              }
+            }
+          }
+        }
+      });
+
+      const directory = path.join(__dirname, '/es6');
+      const filename = path.normalize(`${directory}/module.entry.js`);
+
+      const treeList = dependencyTree({
+        filename,
+        directory,
+        isListForm: true
+      });
+
+      assert.ok(treeList.includes(path.normalize(`${directory}/node_modules/parent_module_a/node_modules/child_node_module/index.main.js`)));
+    });
+
+    it('it uses correct version of sub package in node module package', () => {
+      mockfs({
+        [path.join(__dirname, '/es6')]: {
+          'module.entry.js': 'import * as module from "parent_module_a"',
+          node_modules: {
+            child_node_module: {
+              'index.main.js': 'module.exports = "child_node_module"',
+              'package.json': '{ "main": "index.main.js", "version": "2.0.0"}'
+            },
+            parent_module_a: {
+              'index.main.js': 'import * as child_module from "child_node_module"; module.exports = child_module;',
+              'package.json': '{ "main": "index.main.js"}',
+              node_modules: {
+                child_node_module: {
+                  'index.main.js': 'module.exports = "child_node_module_of_parent_a"',
+                  'package.json': '{ "main": "index.main.js", "version": "1.0.0"}'
+                }
+              }
+            }
+          }
+        }
+      });
+
+      const directory = path.join(__dirname, '/es6');
+      const filename = path.normalize(`${directory}/module.entry.js`);
+
+      const treeList = dependencyTree({
+        filename,
+        directory,
+        isListForm: true
+      });
+
+      assert.ok(!treeList.includes(path.normalize(`${directory}/node_modules/child_node_module/index.main.js`)));
+      assert.ok(treeList.includes(path.normalize(`${directory}/node_modules/parent_module_a/node_modules/child_node_module/index.main.js`)));
+    });
+  });
+
   describe('module formats', () => {
     describe('amd', () => {
       testTreesForFormat('amd');
@@ -506,7 +577,7 @@ describe('dependencyTree', () => {
           mockfs({
             [path.join(__dirname, '/es6')]: {
               'module.entry.js': 'import * as module from "module.entry"',
-              node_modules: { // eslint-disable-line camelcase
+              node_modules: {
                 'module.entry': {
                   'index.main.js': 'module.exports = function() {};',
                   'index.module.js': 'module.exports = function() {};',
@@ -787,7 +858,7 @@ describe('dependencyTree', () => {
       assert.equal(list.length, 3);
       assert.equal(path.normalize(list[0]), path.normalize(`${directory}/c.js`));
       assert.equal(path.normalize(list[1]), path.normalize(`${directory}/b.js`));
-      assert.equal(list[list.length - 1], filename);
+      assert.equal(list.at(-1), filename);
     });
 
     describe('module formats', () => {
@@ -906,8 +977,8 @@ describe('dependencyTree', () => {
       });
 
       const filename = path.resolve(process.cwd(), 'root/a.js');
-      const aliasedFile = path.resolve(process.cwd(), 'root/lodizzle.js').replace(/\\/g, '/');
-      const normalizedTreeFilename = Object.keys(tree[filename]).map(f => f.replace(/\\/g, '/'));
+      const aliasedFile = path.resolve(process.cwd(), 'root/lodizzle.js').replaceAll('\\', '/');
+      const normalizedTreeFilename = Object.keys(tree[filename]).map(f => f.replaceAll('\\', '/'));
       assert.ok(aliasedFile.includes(normalizedTreeFilename));
     });
 
@@ -919,8 +990,8 @@ describe('dependencyTree', () => {
       });
 
       const filename = path.resolve(process.cwd(), 'root/b.js');
-      const aliasedFile = path.resolve(process.cwd(), 'root/lodizzle.js').replace(/\\/g, '/');
-      const normalizedTreeFilename = Object.keys(tree[filename]).map(f => f.replace(/\\/g, '/'));
+      const aliasedFile = path.resolve(process.cwd(), 'root/lodizzle.js').replaceAll('\\', '/');
+      const normalizedTreeFilename = Object.keys(tree[filename]).map(f => f.replaceAll('\\', '/'));
       assert.ok(aliasedFile.includes(normalizedTreeFilename));
     });
   });
@@ -963,6 +1034,18 @@ describe('dependencyTree', () => {
         });
 
         assert.equal(typeof config.tsConfig, 'object');
+      });
+
+      it('includes the tsConfigPath so filing-cabinet can still resolve compilerOptions.paths correctly', () => {
+        const directory = path.join(__dirname, 'fixtures/ts');
+        const tsConfigPath = path.join(directory, '.tsconfig');
+        const config = new Config({
+          filename: 'foo',
+          directory: 'bar',
+          tsConfig: tsConfigPath
+        });
+
+        assert.equal(config.tsConfigPath, tsConfigPath);
       });
     });
 

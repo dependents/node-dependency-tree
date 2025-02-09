@@ -1,6 +1,7 @@
 'use strict';
 
 const fs = require('node:fs');
+const path = require('node:path');
 const { debuglog } = require('node:util');
 const cabinet = require('filing-cabinet');
 const precinct = require('precinct');
@@ -94,9 +95,9 @@ module.exports._getDependencies = function(config = {}) {
 
   const resolvedDependencies = [];
 
-  for (const dep of dependencies) {
+  for (const dependency of dependencies) {
     const result = cabinet({
-      partial: dep,
+      partial: dependency,
       filename: config.filename,
       directory: config.directory,
       ast: precinct.ast,
@@ -104,20 +105,21 @@ module.exports._getDependencies = function(config = {}) {
       webpackConfig: config.webpackConfig,
       nodeModulesConfig: config.nodeModulesConfig,
       tsConfig: config.tsConfig,
+      tsConfigPath: config.tsConfigPath,
       noTypeDefinitions: config.noTypeDefinitions
     });
 
     if (!result) {
-      debug(`skipping an empty filepath resolution for partial: ${dep}`);
-      config.nonExistent.push(dep);
+      debug(`skipping an empty filepath resolution for partial: ${dependency}`);
+      config.nonExistent.push(dependency);
       continue;
     }
 
     const exists = fs.existsSync(result);
 
     if (!exists) {
-      config.nonExistent.push(dep);
-      debug(`skipping non-empty but non-existent resolution: ${result} for partial: ${dep}`);
+      config.nonExistent.push(dependency);
+      debug(`skipping non-empty but non-existent resolution: ${result} for partial: ${dependency}`);
       continue;
     }
 
@@ -156,16 +158,17 @@ function traverse(config = {}) {
     debug(`filtered number of dependencies: ${dependencies.length}`);
   }
 
-  for (const dep of dependencies) {
+  for (const dependency of dependencies) {
     const localConfig = config.clone();
-    localConfig.filename = dep;
+    localConfig.filename = dependency;
+    localConfig.directory = getDirectory(localConfig);
 
     if (localConfig.isListForm) {
       for (const item of traverse(localConfig)) {
         subTree.add(item);
       }
     } else {
-      subTree[dep] = traverse(localConfig);
+      subTree[dependency] = traverse(localConfig);
     }
   }
 
@@ -188,5 +191,27 @@ function dedupeNonExistent(nonExistent) {
   for (const elem of deduped) {
     nonExistent[i] = elem;
     i++;
+  }
+}
+
+// If the file is in a node module, use the root directory of the module
+function getDirectory(localConfig) {
+  if (!localConfig.filename.includes('node_modules')) {
+    return localConfig.directory;
+  }
+
+  return getProjectPath(path.dirname(localConfig.filename)) || localConfig.directory;
+}
+
+function getProjectPath(filename) {
+  try {
+    const nodeModuleParts = filename.split('node_modules');
+    const packageSubPathPath = nodeModuleParts.pop().split(path.sep).filter(Boolean);
+    const packageName = packageSubPathPath[0].startsWith('@') ? `${packageSubPathPath[0]}${path.sep}${packageSubPathPath[1]}` : packageSubPathPath[0];
+
+    return path.normalize([...nodeModuleParts, `${path.sep}${packageName}`].join('node_modules'));
+  } catch {
+    debug(`Could not determine the root directory of package file ${filename}. Using default`);
+    return null;
   }
 }
