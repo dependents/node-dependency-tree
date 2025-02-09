@@ -139,26 +139,6 @@ describe('dependencyTree', () => {
     assert.ok(!Object.keys(subTree).includes('notReal'));
   });
 
-  it('test includeNonExisting=true', () => {
-    const directory = path.join(__dirname, '/fixtures/onlyRealDeps');
-    const filename = path.normalize(`${directory}/a.js`);
-
-    const tree = dependencyTree({ filename, directory, includeNonExisting: true });
-    const subTree = tree[filename];
-
-    assert.ok(Object.keys(subTree).includes(':!EXISTS: not-real'));
-  });
-
-  it('test includeCore=true', () => {
-    const directory = path.join(__dirname, '/fixtures/onlyRealDeps');
-    const filename = path.normalize(`${directory}/a.js`);
-
-    const tree = dependencyTree({ filename, directory, includeCore: true });
-    const subTree = tree[filename];
-
-    assert.ok(Object.keys(subTree).includes(':!EXISTS: path'));
-  });
-
   it('does not choke on cyclic dependencies', () => {
     mockfs({
       [path.join(__dirname, '/cyclic')]: {
@@ -239,6 +219,26 @@ describe('dependencyTree', () => {
 
     assert.ok(list.includes(path.join(directory, 'required.d.ts')));
     assert.ok(!list.includes(path.join(directory, 'required.js')));
+  });
+
+  it('test includeNonExisting=true', () => {
+    const directory = path.join(__dirname, '/fixtures/onlyRealDeps');
+    const filename = path.normalize(`${directory}/a.js`);
+
+    const tree = dependencyTree({ filename, directory, includeNonExisting: true });
+    const subTree = tree[filename];
+
+    assert.ok(Object.keys(subTree).includes(':!EXISTS: not-real'));
+  });
+
+  it('test includeCore=true', () => {
+    const directory = path.join(__dirname, '/fixtures/onlyRealDeps');
+    const filename = path.normalize(`${directory}/a.js`);
+
+    const tree = dependencyTree({ filename, directory, includeCore: true });
+    const subTree = tree[filename];
+
+    assert.ok(Object.keys(subTree).includes(':!EXISTS: path'));
   });
 
   describe('when given a detective configuration', () => {
