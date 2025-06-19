@@ -221,6 +221,26 @@ describe('dependencyTree', () => {
     assert.ok(!list.includes(path.join(directory, 'required.js')));
   });
 
+  it('test includeNonExisting=true', () => {
+    const directory = path.join(__dirname, '/fixtures/onlyRealDeps');
+    const filename = path.normalize(`${directory}/a.js`);
+
+    const tree = dependencyTree({ filename, directory, includeNonExisting: true });
+    const subTree = tree[filename];
+
+    assert.ok(Object.keys(subTree).includes(':!EXISTS: not-real'));
+  });
+
+  it('test includeCore=true', () => {
+    const directory = path.join(__dirname, '/fixtures/onlyRealDeps');
+    const filename = path.normalize(`${directory}/a.js`);
+
+    const tree = dependencyTree({ filename, directory, includeCore: true });
+    const subTree = tree[filename];
+
+    assert.ok(Object.keys(subTree).includes(':!EXISTS: path'));
+  });
+
   describe('when given a detective configuration', () => {
     it('passes it through to precinct', () => {
       const spy = sinon.spy(precinct, 'paperwork');
