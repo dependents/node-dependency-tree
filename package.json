@@ -1,6 +1,6 @@
 {
   "name": "dependency-tree",
-  "version": "11.3.0",
+  "version": "11.4.0",
   "description": "Get the dependency tree of a module",
   "main": "index.js",
   "types": "index.d.ts",
