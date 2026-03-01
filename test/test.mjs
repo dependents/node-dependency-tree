@@ -847,6 +847,37 @@ describe('dependencyTree', () => {
       assert.equal(list.length, 0);
     });
 
+    it('does not throw when the dependency graph exceeds V8\'s argument spread limit', () => {
+      // The original code stored each file's full transitive closure in config.visited and then
+      // wrote: config.visited[filename].push(...subTree)
+      // V8 imposes a maximum argument count on function calls. For a real project with more
+      // transitive dependencies than that limit (~100k–250k on modern Node), the spread throws:
+      //   RangeError: Maximum call stack size exceeded
+      // which manifests as the "heap out of memory" crash seen in practice.
+      //
+      // We replicate the exact condition by injecting a fake _getDependencies that returns a
+      // star graph of 200,000 leaf files (all imported by one entry) without needing real files.
+      const N = 200_000;
+      const entry = path.resolve('root/entry.js');
+      const leaves = Array.from({ length: N }, (_, i) => path.resolve(`root/f${i}.js`));
+
+      mockfs({ root: { 'entry.js': '' } });
+
+      const orig = dependencyTree._getDependencies;
+      dependencyTree._getDependencies = config => (config.filename === entry ? leaves : []);
+
+      let list;
+      try {
+        list = dependencyTree.toList({ filename: 'root/entry.js', directory: 'root' });
+      } finally {
+        dependencyTree._getDependencies = orig;
+      }
+
+      // N leaves + the entry itself, each exactly once
+      assert.equal(list.length, N + 1);
+      assert.equal(list.at(-1), entry);
+    });
+
     it('orders the visited files by last visited', () => {
       const directory = path.join(__dirname, '/fixtures/amd');
       const filename = path.normalize(`${directory}/a.js`);
