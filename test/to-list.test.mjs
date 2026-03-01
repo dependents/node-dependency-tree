@@ -50,6 +50,38 @@ describe('toList', () => {
     assert.equal(list.at(-1), filename);
   });
 
+  it('does not throw when the dependency graph exceeds the V8 argument spread limit', () => {
+    // The original code stored each file's full transitive closure in config.visited and then
+    // wrote: config.visited[filename].push(...subTree)
+    // V8 imposes a maximum argument count on function calls. For a project with more
+    // transitive dependencies than that limit (~100k–250k on modern Node), the spread throws:
+    //   RangeError: Maximum call stack size exceeded
+    // _getDependencies is stubbed out because parsing a 200k-require JS file with acorn
+    // takes ~2s per file, making a real-files approach impractical as a unit test.
+    const N = 200_000;
+    const entry = path.resolve('root/entry.js');
+    const leaves = Array.from({ length: N }, (_, i) => path.resolve(`root/f${i}.js`));
+
+    mockfs({
+      root: {
+        'entry.js': ''
+      }
+    });
+
+    const orig = dependencyTree._getDependencies;
+    dependencyTree._getDependencies = config => (config.filename === entry ? leaves : []);
+
+    let list;
+    try {
+      list = dependencyTree.toList({ filename: 'root/entry.js', directory: 'root' });
+    } finally {
+      dependencyTree._getDependencies = orig;
+    }
+
+    assert.equal(list.length, N + 1);
+    assert.equal(list.at(-1), entry);
+  });
+
   describe('module formats', () => {
     describe('amd', () => {
       testToList('amd');

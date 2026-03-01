@@ -136,11 +136,25 @@ module.exports._getDependencies = function(config = {}) {
  * @return {Object|Set}
  */
 function traverse(config = {}) {
-  const subTree = config.isListForm ? new Set() : {};
+  // In list form all clones share one Set via config.visited (passed by reference),
+  // so subTree is the same object in every recursive call - no merging needed.
+  const subTree = config.isListForm ?
+    (config.visited.__sharedSet ??= new Set()) :
+    {};
 
   debug(`traversing ${config.filename}`);
 
-  if (config.visited[config.filename]) {
+  if (config.isListForm) {
+    // Use a private __seen Set so config.visited[filename] keeps its public semantics.
+    config.visited.__seen ??= new Set();
+    const seen = config.visited.__seen;
+    if (seen.has(config.filename) || config.visited[config.filename]) {
+      debug(`already visited ${config.filename}`);
+      return subTree;
+    }
+
+    seen.add(config.filename);
+  } else if (config.visited[config.filename]) {
     debug(`already visited ${config.filename}`);
     return config.visited[config.filename];
   }
@@ -150,7 +164,9 @@ function traverse(config = {}) {
   debug('cabinet-resolved all dependencies: ', dependencies);
   // Prevents cycles by eagerly marking the current file as read
   // so that any dependent dependencies exit
-  config.visited[config.filename] = config.isListForm ? [] : {};
+  if (!config.isListForm) {
+    config.visited[config.filename] = {};
+  }
 
   if (config.filter) {
     debug('using filter function to filter out dependencies');
@@ -166,9 +182,7 @@ function traverse(config = {}) {
     localConfig.directory = getDirectory(localConfig);
 
     if (localConfig.isListForm) {
-      for (const item of traverse(localConfig)) {
-        subTree.add(item);
-      }
+      traverse(localConfig);
     } else {
       subTree[dependency] = traverse(localConfig);
     }
@@ -176,7 +190,6 @@ function traverse(config = {}) {
 
   if (config.isListForm) {
     subTree.add(config.filename);
-    config.visited[config.filename].push(...subTree);
   } else {
     config.visited[config.filename] = subTree;
   }
