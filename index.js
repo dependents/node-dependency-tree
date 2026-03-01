@@ -156,7 +156,7 @@ function traverse(config = {}) {
     seen.add(config.filename);
   } else if (config.visited[config.filename]) {
     debug(`already visited ${config.filename}`);
-    return config.visited[config.filename];
+    return {};
   }
 
   let dependencies = module.exports._getDependencies(config);

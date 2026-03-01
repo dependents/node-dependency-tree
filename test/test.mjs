@@ -1,6 +1,7 @@
 /* eslint-env mocha */
 
 import { strict as assert } from 'node:assert';
+import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -121,6 +122,22 @@ describe('dependencyTree', () => {
     assert.equal(Object.keys(bTree).length, 2);
     // f ang g
     assert.equal(Object.keys(cTree).length, 2);
+  });
+
+  it('does not return shared object references for nodes visited more than once', () => {
+    // Diamond: a->{b,c}, b->c, c->d — c is reachable via two paths.
+    // traverse() must return a fresh {} on revisit rather than the cached subtree object.
+    // If it returns the cached reference, tree[a][b][c] === tree[a][c] and JSON.stringify
+    // would re-expand c's full subtree at every occurrence, causing O(N²) output / heap OOM.
+    const directory = path.join(__dirname, 'fixtures/shared');
+    const filename = path.join(directory, 'a.js');
+    const tree = dependencyTree({ filename, directory });
+
+    const aSubTree = tree[filename];
+    const cViaB = aSubTree[path.join(directory, 'b.js')][path.join(directory, 'c.js')];
+    const cDirect = aSubTree[path.join(directory, 'c.js')];
+
+    assert.notEqual(cViaB, cDirect, 'subtree for a revisited node must not be the same object reference');
   });
 
   it('does not include files that are not real (#13)', () => {
@@ -1101,5 +1118,45 @@ describe('dependencyTree', () => {
         });
       });
     });
+  });
+});
+
+describe('cli', () => {
+  const cli = path.resolve(__dirname, '../bin/cli.js');
+
+  it('outputs one path per line for the list form', () => {
+    const directory = path.join(__dirname, 'fixtures/commonjs');
+    const filename = path.join(directory, 'a.js');
+    const result = spawnSync(process.execPath, [cli, '--directory', directory, '--list-form', filename], { encoding: 'utf8' });
+
+    assert.equal(result.status, 0, `CLI exited with error:\n${result.stderr}`);
+    const lines = result.stdout.trim().split('\n');
+    assert.ok(lines.length > 0);
+    assert.ok(lines.every(l => path.isAbsolute(l)));
+  });
+
+  it('collapses already-serialised subtrees to {} in JSON output', () => {
+    // The fixture is a diamond: a->{b,c}, b->c, c->d, d->(empty).
+    // traverse() previously returned the cached subtree reference on revisit, so the same
+    // object appeared at multiple places in the output tree, causing JSON.stringify to
+    // re-expand it in full each time (O(N²) string, heap OOM on large graphs).
+    // Fix: traverse() now returns {} on revisit — no shared references enter the tree.
+    // Assertion: tree[a][c] is {} (revisit) while tree[a][b][c] has d as a key (first visit).
+    const directory = path.join(__dirname, 'fixtures/shared');
+    const filename = path.join(directory, 'a.js');
+    const result = spawnSync(process.execPath, [cli, '--directory', directory, filename], { encoding: 'utf8' });
+
+    assert.equal(result.status, 0, `CLI exited with error:\n${result.stderr}`);
+
+    const tree = JSON.parse(result.stdout);
+    const aSubTree = tree[filename];
+    const bPath = path.join(directory, 'b.js');
+    const cPath = path.join(directory, 'c.js');
+    const dPath = path.join(directory, 'd.js');
+
+    // First occurrence of c (via b) is fully serialised and contains d
+    assert.ok(Object.hasOwn(aSubTree[bPath][cPath], dPath), 'first occurrence of c subtree should contain d');
+    // Second occurrence of c (directly under a) is collapsed — the fix
+    assert.equal(Object.keys(aSubTree[cPath]).length, 0, 'second occurrence of shared c subtree should be collapsed to {}');
   });
 });
