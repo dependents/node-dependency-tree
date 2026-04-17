@@ -36,5 +36,16 @@ if (cliOptions.listForm) {
 } else {
   const tree = dependencyTree(options);
 
-  console.log(JSON.stringify(tree));
+  // Collapse repeated subtree references so diamond graphs don't blow up JSON output
+  // into an O(N²) string. Each object is emitted in full the first time it's seen;
+  // subsequent occurrences serialise as {}.
+  const seen = new WeakSet();
+  console.log(JSON.stringify(tree, (_key, value) => {
+    if (value && typeof value === 'object') {
+      if (seen.has(value)) return {};
+      seen.add(value);
+    }
+
+    return value;
+  }));
 }

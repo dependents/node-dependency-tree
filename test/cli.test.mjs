@@ -22,4 +22,23 @@ describe('cli', () => {
     assert.ok(lines.length > 0);
     assert.ok(lines.every(l => path.isAbsolute(l)));
   });
+
+  it('does not re-expand shared subtrees in JSON output (diamond graph)', () => {
+    // Diamond: a->{b,c}, b->c, c->d. traverse() returns the cached c subtree on the
+    // second visit, so JSON.stringify would re-expand it without the CLI's replacer.
+    const directory = fixtures('shared');
+    const filename = path.join(directory, 'a.js');
+    const result = spawnSync(
+      process.execPath,
+      [cli, '--directory', directory, filename],
+      { encoding: 'utf8' }
+    );
+
+    assert.equal(result.status, 0, `CLI exited with error:\n${result.stderr}`);
+
+    const dPath = path.join(directory, 'd.js');
+    const escapedD = JSON.stringify(dPath).slice(1, -1);
+    const occurrences = result.stdout.split(escapedD).length - 1;
+    assert.equal(occurrences, 1, `d.js appears ${occurrences} times in JSON output; shared subtree re-expanded`);
+  });
 });
