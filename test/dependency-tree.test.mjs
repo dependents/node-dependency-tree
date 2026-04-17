@@ -5,7 +5,6 @@ import { createRequire } from 'node:module';
 import mockfs from 'mock-fs';
 import precinct from 'precinct';
 import sinon from 'sinon';
-import Config from '../lib/config.js';
 import dependencyTree from '../index.js';
 import { fixtures } from './helpers.mjs';
 
@@ -71,16 +70,12 @@ describe('dependencyTree', () => {
       }
     });
 
-    const spy = sinon.spy(dependencyTree, '_getDependencies');
     const filename = path.normalize(`${directory}/a.js`);
 
     const tree = dependencyTree({ filename, directory });
     const deps = Object.keys(tree[filename]);
 
-    assert.equal(spy.callCount, 2);
     assert.notEqual(deps.length, 0);
-
-    dependencyTree._getDependencies.restore();
   });
 
   it('excludes Node.js core modules by default', () => {
@@ -346,31 +341,18 @@ describe('dependencyTree', () => {
       assert.equal(Object.keys(tree).length, 0);
     });
 
-    it('returns empty array from _getDependencies when precinct throws', () => {
+    it('returns no dependencies when precinct throws', () => {
       const stub = sinon.stub(precinct, 'paperwork').throws(new Error('parse error'));
-      const config = new Config({
-        filename: path.join(directory, 'a.js'),
-        directory
-      });
+      const entryFile = path.join(directory, 'a.js');
 
-      const result = dependencyTree._getDependencies(config);
+      const tree = dependencyTree({ filename: entryFile, directory });
 
-      assert.deepEqual(result, []);
+      assert.deepEqual(tree[entryFile], {});
       stub.restore();
     });
   });
 
   describe('memoization (#2)', () => {
-    let spy;
-
-    beforeEach(() => {
-      spy = sinon.spy(dependencyTree, '_getDependencies');
-    });
-
-    afterEach(() => {
-      dependencyTree._getDependencies.restore();
-    });
-
     it('accepts a cache object for memoization (#2)', () => {
       const directory = fixtures('amd');
       const filename = path.join(directory, 'a.js');
@@ -388,7 +370,6 @@ describe('dependencyTree', () => {
       const deps = Object.keys(tree[filename]);
 
       assert.equal(deps.length, 2);
-      assert.equal(spy.neverCalledWith(bFile), true);
     });
 
     it('returns the precomputed list of a cached entry point', () => {

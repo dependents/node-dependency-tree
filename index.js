@@ -67,12 +67,11 @@ module.exports.toList = function(options = {}) {
 
 /**
  * Returns resolved dependency paths for the file described by `config`.
- * Exposed for testing.
  *
  * @param {Config} config
  * @returns {Array<string>}
  */
-module.exports._getDependencies = function(config = {}) {
+function getDependencies(config = {}) {
   const precinctOptions = config.detectiveConfig;
   precinctOptions.includeCore = false;
   let dependencies;
@@ -120,7 +119,7 @@ module.exports._getDependencies = function(config = {}) {
   }
 
   return resolvedDependencies;
-};
+}
 
 /**
  * @param {Config} config
@@ -136,7 +135,7 @@ function traverse(config = {}) {
     return config.visited[config.filename];
   }
 
-  let dependencies = module.exports._getDependencies(config);
+  let dependencies = getDependencies(config);
 
   debug('cabinet-resolved all dependencies: ', dependencies);
   // Eagerly mark the current file before recursing so any re-entrant visit exits early
