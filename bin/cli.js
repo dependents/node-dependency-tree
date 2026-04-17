@@ -27,16 +27,14 @@ const options = {
   tsConfig: cliOptions.tsConfig
 };
 
-let tree;
-
 if (cliOptions.listForm) {
-  tree = dependencyTree.toList(options);
+  const tree = dependencyTree.toList(options);
 
   for (const node of tree) {
     console.log(node);
   }
 } else {
-  tree = dependencyTree(options);
+  const tree = dependencyTree(options);
 
   console.log(JSON.stringify(tree));
 }
