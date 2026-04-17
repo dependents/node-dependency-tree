@@ -76,12 +76,10 @@ module.exports.toList = function(options = {}) {
 /**
  * Returns the list of dependencies for the given filename
  *
- * Protected for testing
- *
  * @param  {Config} config
  * @return {Array}
  */
-module.exports._getDependencies = function(config = {}) {
+function getDependencies(config = {}) {
   const precinctOptions = config.detectiveConfig;
   precinctOptions.includeCore = false;
   let dependencies;
@@ -129,7 +127,7 @@ module.exports._getDependencies = function(config = {}) {
   }
 
   return resolvedDependencies;
-};
+}
 
 /**
  * @param  {Config} config
@@ -145,7 +143,7 @@ function traverse(config = {}) {
     return config.visited[config.filename];
   }
 
-  let dependencies = module.exports._getDependencies(config);
+  let dependencies = getDependencies(config);
 
   debug('cabinet-resolved all dependencies: ', dependencies);
   // Prevents cycles by eagerly marking the current file as read

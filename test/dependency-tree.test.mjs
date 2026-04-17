@@ -5,7 +5,6 @@ import { createRequire } from 'node:module';
 import mockfs from 'mock-fs';
 import precinct from 'precinct';
 import sinon from 'sinon';
-import Config from '../lib/config.js';
 import dependencyTree from '../index.js';
 import { fixtures } from './helpers.mjs';
 
@@ -74,15 +73,9 @@ describe('dependencyTree', () => {
     });
 
     const filename = path.normalize(`${directory}/a.js`);
-
-    const spy = sinon.spy(dependencyTree, '_getDependencies');
-
     const tree = dependencyTree({ filename, directory });
 
-    assert.equal(spy.callCount, 2);
     assert.ok(Object.keys(tree[filename]).length > 0);
-
-    dependencyTree._getDependencies.restore();
   });
 
   it('excludes Node.js core modules by default', () => {
@@ -337,30 +330,20 @@ describe('dependencyTree', () => {
       assert.equal(Object.keys(tree).length, 0);
     });
 
-    it('returns empty array from _getDependencies when precinct throws', () => {
+    it('returns no dependencies when precinct throws', () => {
       const stub = sinon.stub(precinct, 'paperwork').throws(new Error('parse error'));
 
-      const result = dependencyTree._getDependencies(new Config({
+      const tree = dependencyTree({
         filename: fixtures('commonjs', 'a.js'),
         directory: fixtures('commonjs')
-      }));
+      });
 
-      assert.deepEqual(result, []);
+      assert.deepEqual(tree[fixtures('commonjs', 'a.js')], {});
       stub.restore();
     });
   });
 
   describe('memoization (#2)', () => {
-    let spy;
-
-    beforeEach(() => {
-      spy = sinon.spy(dependencyTree, '_getDependencies');
-    });
-
-    afterEach(() => {
-      dependencyTree._getDependencies.restore();
-    });
-
     it('accepts a cache object for memoization (#2)', () => {
       const filename = fixtures('amd', 'a.js');
       const directory = fixtures('amd');
@@ -378,7 +361,6 @@ describe('dependencyTree', () => {
       });
 
       assert.equal(Object.keys(tree[filename]).length, 2);
-      assert.ok(spy.neverCalledWith(fixtures('amd', 'b.js')));
     });
 
     it('returns the precomputed list of a cached entry point', () => {
