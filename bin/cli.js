@@ -10,12 +10,14 @@ program
   .name(name)
   .description(description)
   .version(version)
+  .argument('<filename>', 'the path to file to examine')
   .usage('[options] <filename>')
   .option('-d, --directory <path>', 'location of files of supported filetypes')
   .option('-c, --require-config <path>', 'path to a requirejs config')
   .option('-w, --webpack-config <path>', 'path to a webpack config')
   .option('-t, --ts-config <path>', 'path to a typescript config')
   .option('--list-form', 'output the list form of the tree (one element per line)')
+  .showHelpAfterError()
   .parse();
 
 const cliOptions = program.opts();
