@@ -51,7 +51,7 @@
   "dependencies": {
     "commander": "^12.1.0",
     "filing-cabinet": "^5.3.0",
-    "precinct": "^12.3.0",
+    "precinct": "^12.3.1",
     "typescript": "^5.9.3"
   },
   "devDependencies": {
