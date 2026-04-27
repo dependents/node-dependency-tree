@@ -2,9 +2,11 @@
 
 'use strict';
 
+const process = require('node:process');
 const { program } = require('commander');
 const dependencyTree = require('../index.js');
 const { name, description, version } = require('../package.json');
+const { writeJsonToStream } = require('../lib/write-json-stream.js');
 
 program
   .name(name)
@@ -38,5 +40,6 @@ if (cliOptions.listForm) {
 } else {
   const tree = dependencyTree(options);
 
-  console.log(JSON.stringify(tree));
+  writeJsonToStream(tree, process.stdout);
+  process.stdout.write('\n');
 }

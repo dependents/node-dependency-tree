@@ -41,3 +41,7 @@ jobs:
 
       - name: Run unit tests
         run: npm run test:ci
+
+      - name: Run slow tests
+        if: matrix.os == 'ubuntu-latest' && (matrix.node == 18 || matrix.node == 24)
+        run: npm run mocha:slow
