@@ -2,7 +2,9 @@
 
 'use strict';
 
+const process = require('node:process');
 const { program } = require('commander');
+const { stringifyChunked } = require('@discoveryjs/json-ext');
 const dependencyTree = require('../index.js');
 const { name, description, version } = require('../package.json');
 
@@ -38,5 +40,9 @@ if (cliOptions.listForm) {
 } else {
   const tree = dependencyTree(options);
 
-  console.log(JSON.stringify(tree));
+  for (const chunk of stringifyChunked(tree)) {
+    process.stdout.write(chunk);
+  }
+
+  process.stdout.write('\n');
 }
