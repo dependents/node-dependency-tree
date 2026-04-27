@@ -17,6 +17,7 @@
     "lint": "xo",
     "fix": "xo --fix",
     "mocha": "mocha \"test/*.test.mjs\"",
+    "mocha:slow": "mocha \"test/slow/*.test.mjs\"",
     "test": "npm run lint && npm run mocha",
     "test:ci": "c8 npm run mocha"
   },
