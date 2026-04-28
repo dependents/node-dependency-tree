@@ -408,4 +408,98 @@ describe('dependencyTree', () => {
       assert.deepEqual(tree[filename], []);
     });
   });
+
+  describe('getLocalConfigDirectory', () => {
+    it('resolves sub-dependencies of a file whose name contains "node_modules" but whose directory does not', () => {
+      const directory = fixtures('nodeModulesInName');
+      mockfs({
+        [directory]: {
+          'a.js': 'var x = require("./node_modules.helper");',
+          'node_modules.helper.js': 'var y = require("./sub");',
+          'sub.js': 'export default 1;'
+        }
+      });
+
+      const filename = path.join(directory, 'a.js');
+      const helperPath = path.join(directory, 'node_modules.helper.js');
+      const subPath = path.join(directory, 'sub.js');
+
+      const list = dependencyTree.toList({ filename, directory });
+
+      assert.equal(list.includes(helperPath), true);
+      assert.equal(list.includes(subPath), true);
+    });
+
+    it('resolves the correct root directory for a scoped package in node_modules', () => {
+      const directory = fixtures('scopedPackage');
+      mockfs({
+        [directory]: {
+          'a.js': 'var x = require("./node_modules/@scope/pkg/index");',
+          node_modules: {
+            '@scope': {
+              pkg: {
+                'index.js': 'var y = require("./util");',
+                'util.js': 'export default 1;'
+              }
+            }
+          }
+        }
+      });
+
+      const filename = path.join(directory, 'a.js');
+      const indexPath = path.join(directory, 'node_modules', '@scope', 'pkg', 'index.js');
+      const utilPath = path.join(directory, 'node_modules', '@scope', 'pkg', 'util.js');
+
+      const list = dependencyTree.toList({ filename, directory });
+
+      assert.equal(list.includes(indexPath), true);
+      assert.equal(list.includes(utilPath), true);
+    });
+
+    it('resolves sub-dependencies for a package inside nested node_modules', () => {
+      const directory = fixtures('nestedNodeModules');
+      mockfs({
+        [directory]: {
+          'a.js': 'var x = require("./node_modules/pkg-a/index");',
+          node_modules: {
+            'pkg-a': {
+              'index.js': 'var y = require("./node_modules/pkg-b/index");',
+              node_modules: {
+                'pkg-b': {
+                  'index.js': 'export default 1;'
+                }
+              }
+            }
+          }
+        }
+      });
+
+      const filename = path.join(directory, 'a.js');
+      const pkgAPath = path.join(directory, 'node_modules', 'pkg-a', 'index.js');
+      const pkgBPath = path.join(directory, 'node_modules', 'pkg-a', 'node_modules', 'pkg-b', 'index.js');
+
+      const list = dependencyTree.toList({ filename, directory });
+
+      assert.equal(list.includes(pkgAPath), true);
+      assert.equal(list.includes(pkgBPath), true);
+    });
+
+    it('does not throw when a file sits directly inside node_modules/ without a package subfolder', () => {
+      const directory = fixtures('directNodeModules');
+      mockfs({
+        [directory]: {
+          'a.js': 'var x = require("./node_modules/direct");',
+          node_modules: {
+            'direct.js': 'export default 1;'
+          }
+        }
+      });
+
+      const filename = path.join(directory, 'a.js');
+
+      assert.doesNotThrow(() => {
+        dependencyTree.toList({ filename, directory });
+      });
+    });
+  });
 });
