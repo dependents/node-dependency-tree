@@ -62,9 +62,7 @@ module.exports = function(options = {}) {
  * @returns {Array<string>}
  */
 module.exports.toList = function(options = {}) {
-  options.isListForm = true;
-
-  return module.exports(options);
+  return module.exports({ ...options, isListForm: true });
 };
 
 /**
