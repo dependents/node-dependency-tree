@@ -21,7 +21,7 @@ function dependencyTree(options = {}) {
     return config.isListForm ? [] : {};
   }
 
-  const results = traverse(config);
+  const results = config.isListForm ? traverseList(config) : traverse(config);
   debug('traversal complete', results);
 
   dedupeNonExistent(config.nonExistent);
@@ -30,7 +30,7 @@ function dependencyTree(options = {}) {
   let tree;
   if (config.isListForm) {
     debug('list form of results requested');
-    tree = [...results];
+    tree = results;
   } else {
     debug('object form of results requested');
     tree = {
@@ -112,10 +112,10 @@ function getDependencies(config) {
 
 /**
  * @param {Config} config
- * @returns {Object|Set<string>}
+ * @returns {Object}
  */
 function traverse(config) {
-  const subTree = config.isListForm ? new Set() : {};
+  const subTree = {};
 
   debug(`traversing ${config.filename}`);
 
@@ -128,7 +128,7 @@ function traverse(config) {
 
   debug('cabinet-resolved all dependencies: ', dependencies);
   // Eagerly mark the current file before recursing so any re-entrant visit exits early
-  config.visited[config.filename] = config.isListForm ? [] : {};
+  config.visited[config.filename] = {};
 
   if (config.filter) {
     debug('using filter function to filter out dependencies');
@@ -142,24 +142,56 @@ function traverse(config) {
     const localConfig = config.clone();
     localConfig.filename = dependency;
     localConfig.directory = getLocalConfigDirectory(localConfig);
-
-    if (localConfig.isListForm) {
-      for (const item of traverse(localConfig)) {
-        subTree.add(item);
-      }
-    } else {
-      subTree[dependency] = traverse(localConfig);
-    }
+    subTree[dependency] = traverse(localConfig);
   }
 
-  if (config.isListForm) {
-    subTree.add(config.filename);
-    config.visited[config.filename].push(...subTree);
-  } else {
-    config.visited[config.filename] = subTree;
-  }
+  config.visited[config.filename] = subTree;
 
   return subTree;
+}
+
+/**
+ * Returns a post-order flat list via a single DFS pass - O(N) in unique files.
+ *
+ * @param {Config} config
+ * @returns {Array<string>}
+ */
+function traverseList(config) {
+  const result = [];
+  traverseListHelper(config, result);
+  return result;
+}
+
+/**
+ * @param {Config} config
+ * @param {Array<string>} result
+ */
+function traverseListHelper(config, result) {
+  if (config.visited[config.filename]) return;
+
+  // Eagerly mark the current file before recursing so any re-entrant visit exits early
+  config.visited[config.filename] = [];
+
+  let dependencies = getDependencies(config);
+
+  debug('cabinet-resolved all dependencies: ', dependencies);
+
+  if (config.filter) {
+    debug('using filter function to filter out dependencies');
+    debug(`unfiltered number of dependencies: ${dependencies.length}`);
+    // eslint-disable-next-line unicorn/no-array-method-this-argument, unicorn/no-array-callback-reference
+    dependencies = dependencies.filter(filePath => config.filter(filePath, config.filename));
+    debug(`filtered number of dependencies: ${dependencies.length}`);
+  }
+
+  for (const dependency of dependencies) {
+    const localConfig = config.clone();
+    localConfig.filename = dependency;
+    localConfig.directory = getLocalConfigDirectory(localConfig);
+    traverseListHelper(localConfig, result);
+  }
+
+  result.push(config.filename);
 }
 
 // Dedupe in-place so the caller's array reference stays valid
