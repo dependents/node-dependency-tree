@@ -9,7 +9,7 @@ function assertResolvesToLodizzle(tree, entryFile) {
   const filename = path.resolve(process.cwd(), entryFile);
   const aliasedFile = path.resolve(process.cwd(), 'root/lodizzle.js').replaceAll('\\', '/');
   const normalizedTreeFilename = Object.keys(tree[filename]).map(f => f.replaceAll('\\', '/'));
-  assert.ok(aliasedFile.includes(normalizedTreeFilename));
+  assert.equal(aliasedFile.includes(normalizedTreeFilename), true);
 }
 
 describe('webpack', () => {
@@ -17,6 +17,7 @@ describe('webpack', () => {
   // otherwise, we'd have to mock a ton of files.
   const root = path.join(testDir, '../');
   const webpackConfig = fixtures('webpack.config.js');
+  const filingCabinetPath = path.normalize('node_modules/filing-cabinet');
 
   it('resolves aliased modules', () => {
     const results = dependencyTree.toList({
@@ -26,7 +27,7 @@ describe('webpack', () => {
       filter: filename => filename.includes('filing-cabinet')
     });
 
-    assert.ok(results.some(filename => filename.includes(path.normalize('node_modules/filing-cabinet'))));
+    assert.equal(results.some(filename => filename.includes(filingCabinetPath)), true);
   });
 
   it('resolves unaliased modules', () => {
@@ -37,18 +38,17 @@ describe('webpack', () => {
       filter: filename => filename.includes('filing-cabinet')
     });
 
-    assert.ok(results.some(filename => filename.includes(path.normalize('node_modules/filing-cabinet'))));
+    assert.equal(results.some(filename => filename.includes(filingCabinetPath)), true);
   });
 });
 
 describe('requirejs', () => {
-  afterEach(() => {
-    mockfs.restore();
-  });
+  const directory = 'root';
+  const requireConfig = 'root/require.config.js';
 
   beforeEach(() => {
     mockfs({
-      root: {
+      [directory]: {
         'lodizzle.js': 'define({})',
         'require.config.js': `
           requirejs.config({
@@ -76,29 +76,37 @@ describe('requirejs', () => {
     });
   });
 
+  afterEach(() => {
+    mockfs.restore();
+  });
+
   it('resolves aliased modules', () => {
+    const filename = 'root/a.js';
+
     const tree = dependencyTree({
-      filename: 'root/a.js',
-      directory: 'root',
-      config: 'root/require.config.js'
+      filename,
+      directory,
+      config: requireConfig
     });
 
-    assertResolvesToLodizzle(tree, 'root/a.js');
+    assertResolvesToLodizzle(tree, filename);
   });
 
   it('resolves non-aliased paths', () => {
+    const filename = 'root/b.js';
+
     const tree = dependencyTree({
-      filename: 'root/b.js',
-      directory: 'root',
-      config: 'root/require.config.js'
+      filename,
+      directory,
+      config: requireConfig
     });
 
-    assertResolvesToLodizzle(tree, 'root/b.js');
+    assertResolvesToLodizzle(tree, filename);
   });
 
   it('adds to nonExistent when the alias resolves to a path that does not exist on disk', () => {
     mockfs({
-      root: {
+      [directory]: {
         'a.js': 'define(["phantom"], function(p) {});',
         'require.config.js': `
           requirejs.config({
@@ -115,11 +123,11 @@ describe('requirejs', () => {
 
     dependencyTree({
       filename: 'root/a.js',
-      directory: 'root',
-      config: 'root/require.config.js',
+      directory,
+      config: requireConfig,
       nonExistent
     });
 
-    assert.ok(nonExistent.includes('phantom'));
+    assert.equal(nonExistent.includes('phantom'), true);
   });
 });

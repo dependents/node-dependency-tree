@@ -34,18 +34,15 @@ describe('dependencyTree', () => {
     const filename = path.normalize(`${directory}/a.js`);
 
     const tree = dependencyTree({ filename, directory });
-    assert.ok(tree[filename] instanceof Object);
-
-    // b and c
     const subTree = tree[filename];
-    assert.equal(Object.keys(subTree).length, 2);
-
     const bTree = subTree[path.normalize(`${directory}/b.js`)];
     const cTree = subTree[path.normalize(`${directory}/c.js`)];
-    // d and e
-    assert.equal(Object.keys(bTree).length, 2);
-    // f and g
-    assert.equal(Object.keys(cTree).length, 2);
+
+    assert.ok(tree instanceof Object);
+    assert.ok(subTree instanceof Object);
+    assert.equal(Object.keys(subTree).length, 2); // b and c
+    assert.equal(Object.keys(bTree).length, 2); // d and e
+    assert.equal(Object.keys(cTree).length, 2); // f and g
   });
 
   it('does not include files that are not real (#13)', () => {
@@ -60,8 +57,9 @@ describe('dependencyTree', () => {
 
     const tree = dependencyTree({ filename, directory });
     const subTree = tree[filename];
+    const deps = Object.keys(subTree);
 
-    assert.ok(!Object.keys(subTree).includes('notReal'));
+    assert.equal(deps.includes('notReal'), false);
   });
 
   it('does not choke on cyclic dependencies', () => {
@@ -73,14 +71,14 @@ describe('dependencyTree', () => {
       }
     });
 
+    const spy = sinon.spy(dependencyTree, '_getDependencies');
     const filename = path.normalize(`${directory}/a.js`);
 
-    const spy = sinon.spy(dependencyTree, '_getDependencies');
-
     const tree = dependencyTree({ filename, directory });
+    const deps = Object.keys(tree[filename]);
 
     assert.equal(spy.callCount, 2);
-    assert.ok(Object.keys(tree[filename]).length > 0);
+    assert.notEqual(deps.length, 0);
 
     dependencyTree._getDependencies.restore();
   });
@@ -90,8 +88,11 @@ describe('dependencyTree', () => {
     const filename = path.normalize(`${directory}/b.js`);
 
     const tree = dependencyTree({ filename, directory });
-    assert.equal(Object.keys(tree[filename]).length, 0);
-    assert.ok(Object.keys(tree)[0].includes('b.js'));
+    const deps = Object.keys(tree[filename]);
+    const firstKey = Object.keys(tree)[0];
+
+    assert.equal(deps.length, 0);
+    assert.equal(firstKey.includes('b.js'), true);
   });
 
   it('traverses installed 3rd party node modules', () => {
@@ -100,8 +101,9 @@ describe('dependencyTree', () => {
 
     const tree = dependencyTree({ filename, directory });
     const subTree = tree[filename];
+    const deps = Object.keys(subTree);
 
-    assert.ok(Object.keys(subTree).includes(require.resolve('debug')));
+    assert.equal(deps.includes(require.resolve('debug')), true);
   });
 
   it('returns a list of absolutely pathed files', () => {
@@ -112,7 +114,7 @@ describe('dependencyTree', () => {
 
     for (const node in tree.nodes) {
       if (Object.hasOwn(tree.nodes, node)) {
-        assert.ok(node.includes(process.cwd()));
+        assert.equal(node.includes(process.cwd()), true);
       }
     }
   });
@@ -139,11 +141,13 @@ describe('dependencyTree', () => {
   it('resolves TypeScript imports to their type definition files by default', () => {
     const directory = fixtures('noTypeDefinitions');
     const filename = path.join(directory, 'entrypoint.ts');
+    const dtsPath = path.join(directory, 'required.d.ts');
+    const jsPath = path.join(directory, 'required.js');
 
     const list = dependencyTree.toList({ filename, directory });
 
-    assert.ok(list.includes(path.join(directory, 'required.d.ts')));
-    assert.ok(!list.includes(path.join(directory, 'required.js')));
+    assert.equal(list.includes(dtsPath), true);
+    assert.equal(list.includes(jsPath), false);
   });
 
   it('passes detective config through to precinct', () => {
@@ -162,7 +166,7 @@ describe('dependencyTree', () => {
       detective: detectiveConfig
     });
 
-    assert.ok(spy.calledWith(filename, detectiveConfig));
+    assert.equal(spy.calledWith(filename, detectiveConfig), true);
     spy.restore();
   });
 
@@ -175,15 +179,20 @@ describe('dependencyTree', () => {
       directory,
       // Skip all 3rd party deps
       filter(filePath, moduleFile) {
+        const normalizedModuleFile = moduleFile.replaceAll('\\', '/');
+        const expectedPath = path.normalize('test/fixtures/onlyRealDeps/a.js').replaceAll('\\', '/');
         assert.ok(require.resolve('debug'));
-        assert.ok(moduleFile.replaceAll('\\', '/').match(path.normalize('test/fixtures/onlyRealDeps/a.js').replaceAll('\\', '/')));
+        assert.ok(normalizedModuleFile.match(expectedPath));
         return !filePath.includes('node_modules');
       }
     });
 
     const subTree = tree[filename];
-    assert.ok(Object.keys(tree).length > 0);
-    assert.ok(!Object.keys(subTree).includes(require.resolve('debug')));
+    const deps = Object.keys(subTree);
+    const treeKeys = Object.keys(tree);
+
+    assert.notEqual(treeKeys.length, 0);
+    assert.equal(deps.includes(require.resolve('debug')), false);
   });
 
   it('stores invalid partials in the nonExistent list', () => {
@@ -259,13 +268,13 @@ describe('dependencyTree', () => {
   });
 
   it('stores a Sass partial in nonExistent when the resolved path does not exist on disk', () => {
+    const directory = fixtures('sass');
     mockfs({
-      [fixtures('sass')]: {
+      [directory]: {
         'a.scss': '@import "missing-partial";'
       }
     });
 
-    const directory = fixtures('sass');
     const filename = path.normalize(`${directory}/a.scss`);
     const nonExistent = [];
 
@@ -339,11 +348,12 @@ describe('dependencyTree', () => {
 
     it('returns empty array from _getDependencies when precinct throws', () => {
       const stub = sinon.stub(precinct, 'paperwork').throws(new Error('parse error'));
+      const config = new Config({
+        filename: path.join(directory, 'a.js'),
+        directory
+      });
 
-      const result = dependencyTree._getDependencies(new Config({
-        filename: fixtures('commonjs', 'a.js'),
-        directory: fixtures('commonjs')
-      }));
+      const result = dependencyTree._getDependencies(config);
 
       assert.deepEqual(result, []);
       stub.restore();
@@ -362,28 +372,28 @@ describe('dependencyTree', () => {
     });
 
     it('accepts a cache object for memoization (#2)', () => {
-      const filename = fixtures('amd', 'a.js');
       const directory = fixtures('amd');
-      const cache = {};
-
-      cache[fixtures('amd', 'b.js')] = [
-        fixtures('amd', 'b.js'),
-        fixtures('amd', 'c.js')
-      ];
+      const filename = path.join(directory, 'a.js');
+      const bFile = path.join(directory, 'b.js');
+      const cFile = path.join(directory, 'c.js');
+      const cache = {
+        [bFile]: [bFile, cFile]
+      };
 
       const tree = dependencyTree({
         filename,
         directory,
         visited: cache
       });
+      const deps = Object.keys(tree[filename]);
 
-      assert.equal(Object.keys(tree[filename]).length, 2);
-      assert.ok(spy.neverCalledWith(fixtures('amd', 'b.js')));
+      assert.equal(deps.length, 2);
+      assert.equal(spy.neverCalledWith(bFile), true);
     });
 
     it('returns the precomputed list of a cached entry point', () => {
-      const filename = fixtures('amd', 'a.js');
       const directory = fixtures('amd');
+      const filename = path.join(directory, 'a.js');
 
       const cache = {
         [filename]: [] // Shouldn't process the first file's tree

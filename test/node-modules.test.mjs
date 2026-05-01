@@ -28,7 +28,9 @@ describe('package-specific node_modules resolution', () => {
         }
       }
     });
+
     const filename = path.normalize(`${directory}/module.entry.js`);
+    const childPath = path.normalize(`${directory}/node_modules/parent_module_a/node_modules/child_node_module/index.main.js`);
 
     const treeList = dependencyTree({
       filename,
@@ -36,7 +38,7 @@ describe('package-specific node_modules resolution', () => {
       isListForm: true
     });
 
-    assert.ok(treeList.includes(path.normalize(`${directory}/node_modules/parent_module_a/node_modules/child_node_module/index.main.js`)));
+    assert.equal(treeList.includes(childPath), true);
   });
 
   it('uses correct version of sub package in node module package', () => {
@@ -62,7 +64,10 @@ describe('package-specific node_modules resolution', () => {
         }
       }
     });
+
     const filename = path.normalize(`${directory}/module.entry.js`);
+    const rootChildPath = path.normalize(`${directory}/node_modules/child_node_module/index.main.js`);
+    const nestedChildPath = path.normalize(`${directory}/node_modules/parent_module_a/node_modules/child_node_module/index.main.js`);
 
     const treeList = dependencyTree({
       filename,
@@ -70,8 +75,8 @@ describe('package-specific node_modules resolution', () => {
       isListForm: true
     });
 
-    assert.ok(!treeList.includes(path.normalize(`${directory}/node_modules/child_node_module/index.main.js`)));
-    assert.ok(treeList.includes(path.normalize(`${directory}/node_modules/parent_module_a/node_modules/child_node_module/index.main.js`)));
+    assert.equal(treeList.includes(rootChildPath), false);
+    assert.equal(treeList.includes(nestedChildPath), true);
   });
 
   it('falls back to entry directory when a node_modules file has no package subpath', () => {
@@ -87,10 +92,12 @@ describe('package-specific node_modules resolution', () => {
     });
 
     const filename = path.normalize(`${baseDir}/a.js`);
+
     const tree = dependencyTree({ filename, directory: baseDir });
     const subTree = tree[filename];
+    const deps = Object.keys(subTree);
 
-    assert.ok(Object.keys(subTree).some(dep => dep.includes('flatmod')));
+    assert.equal(deps.some(dep => dep.includes('flatmod')), true);
   });
 
   it('resolves the project path for a scoped node_modules package', () => {
@@ -111,9 +118,11 @@ describe('package-specific node_modules resolution', () => {
     });
 
     const filename = path.normalize(`${baseDir}/a.js`);
+
     const tree = dependencyTree({ filename, directory: baseDir });
     const subTree = tree[filename];
+    const deps = Object.keys(subTree);
 
-    assert.ok(Object.keys(subTree).some(dep => dep.includes(path.join('@scope', 'pkg'))));
+    assert.equal(deps.some(dep => dep.includes(path.join('@scope', 'pkg'))), true);
   });
 });

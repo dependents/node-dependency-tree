@@ -39,27 +39,30 @@ describe('module formats', () => {
 
     describe('when given a CJS file with lazy requires', () => {
       it('includes the lazy dependency', () => {
+        const directory = fixtures('cjs');
         mockfs({
-          [fixtures('cjs')]: {
+          [directory]: {
             'foo.js': 'module.exports = function(bar = require("./bar")) {};',
             'bar.js': 'module.exports = 1;'
           }
         });
 
-        const directory = fixtures('cjs');
         const filename = path.normalize(`${directory}/foo.js`);
+        const barPath = path.normalize(`${directory}/bar.js`);
 
         const tree = dependencyTree({ filename, directory });
         const subTree = tree[filename];
+        const deps = Object.keys(subTree);
 
-        assert.ok(Object.keys(subTree).includes(path.normalize(`${directory}/bar.js`)));
+        assert.equal(deps.includes(barPath), true);
       });
     });
 
     describe('when given a CJS file with module property in package.json', () => {
       it('includes the module entry as dependency', () => {
+        const directory = fixtures('es6');
         mockfs({
-          [fixtures('es6')]: {
+          [directory]: {
             'module.entry.js': 'import * as module from "module.entry"',
             node_modules: {
               'module.entry': {
@@ -71,8 +74,8 @@ describe('module formats', () => {
           }
         });
 
-        const directory = fixtures('es6');
         const filename = path.normalize(`${directory}/module.entry.js`);
+        const moduleEntryPath = path.normalize(`${directory}/node_modules/module.entry/index.module.js`);
 
         const tree = dependencyTree({
           filename,
@@ -82,46 +85,53 @@ describe('module formats', () => {
           }
         });
         const subTree = tree[filename];
+        const deps = Object.keys(subTree);
 
-        assert.ok(Object.keys(subTree).includes(path.normalize(`${directory}/node_modules/module.entry/index.module.js`)));
+        assert.equal(deps.includes(moduleEntryPath), true);
       });
     });
   });
 
   describe('es6', () => {
-    const directory = fixtures('es6');
-
     beforeEach(() => {
       mockEs6();
     });
+
+    const directory = fixtures('es6');
 
     testTreesForFormat('es6');
 
     it('resolves files that have jsx', () => {
       const filename = path.normalize(`${directory}/jsx.js`);
-      const tree = dependencyTree({ filename, directory });
 
-      assert.ok(tree[filename][path.normalize(`${directory}/c.js`)]);
+      const tree = dependencyTree({ filename, directory });
+      const subTree = tree[filename];
+
+      assert.ok(subTree[path.normalize(`${directory}/c.js`)]);
     });
 
     it('resolves files with a jsx extension', () => {
       const filename = path.normalize(`${directory}/foo.jsx`);
-      const tree = dependencyTree({ filename, directory });
 
-      assert.ok(tree[filename][path.normalize(`${directory}/b.js`)]);
+      const tree = dependencyTree({ filename, directory });
+      const subTree = tree[filename];
+
+      assert.ok(subTree[path.normalize(`${directory}/b.js`)]);
     });
 
     it('resolves files that have es7', () => {
       const filename = path.normalize(`${directory}/es7.js`);
-      const tree = dependencyTree({ filename, directory });
 
-      assert.ok(tree[filename][path.normalize(`${directory}/c.js`)]);
+      const tree = dependencyTree({ filename, directory });
+      const subTree = tree[filename];
+
+      assert.ok(subTree[path.normalize(`${directory}/c.js`)]);
     });
 
     describe('when given an es6 file using CJS lazy requires', () => {
       beforeEach(() => {
         mockfs({
-          [fixtures('es6')]: {
+          [directory]: {
             'foo.js': 'export default function(bar = require("./bar")) {};',
             'bar.js': 'export default 1;'
           }
@@ -130,6 +140,7 @@ describe('module formats', () => {
 
       it('includes the lazy dependency when mixedImports is on', () => {
         const filename = path.normalize(`${directory}/foo.js`);
+        const barPath = path.normalize(`${directory}/bar.js`);
 
         const tree = dependencyTree({
           filename,
@@ -140,14 +151,15 @@ describe('module formats', () => {
             }
           }
         });
-
         const subTree = tree[filename];
+        const deps = Object.keys(subTree);
 
-        assert.ok(Object.keys(subTree).includes(path.normalize(`${directory}/bar.js`)));
+        assert.equal(deps.includes(barPath), true);
       });
 
       it('toList includes the lazy dependency when mixedImports is on', () => {
         const filename = path.normalize(`${directory}/foo.js`);
+        const barPath = path.normalize(`${directory}/bar.js`);
 
         const results = dependencyTree.toList({
           filename,
@@ -159,35 +171,39 @@ describe('module formats', () => {
           }
         });
 
-        assert.equal(results[0], path.normalize(`${directory}/bar.js`));
+        assert.equal(results[0], barPath);
         assert.equal(results[1], filename);
       });
 
       it('does not include the lazy dependency when mixedImports is off', () => {
         const filename = path.normalize(`${directory}/foo.js`);
+        const barPath = path.normalize(`${directory}/bar.js`);
 
         const tree = dependencyTree({ filename, directory });
         const subTree = tree[filename];
+        const deps = Object.keys(subTree);
 
-        assert.ok(!Object.keys(subTree).includes(path.normalize(`${directory}/bar.js`)));
+        assert.equal(deps.includes(barPath), false);
       });
     });
 
     describe('when given an es6 file using dynamic imports', () => {
       it('includes the dynamic import', () => {
         mockfs({
-          [fixtures('es6')]: {
+          [directory]: {
             'foo.js': 'import("./bar");',
             'bar.js': 'export default 1;'
           }
         });
 
         const filename = path.normalize(`${directory}/foo.js`);
+        const barPath = path.normalize(`${directory}/bar.js`);
 
         const tree = dependencyTree({ filename, directory });
         const subTree = tree[filename];
+        const deps = Object.keys(subTree);
 
-        assert.ok(Object.keys(subTree).includes(path.normalize(`${directory}/bar.js`)));
+        assert.equal(deps.includes(barPath), true);
       });
     });
   });
@@ -217,28 +233,28 @@ describe('module formats', () => {
   });
 
   describe('typescript', () => {
+    const directory = fixtures('ts');
+
     testTreesForFormat('ts', '.ts');
 
     it('utilizes a tsconfig', () => {
-      const directory = fixtures('ts');
+      const filename = path.join(directory, 'a.ts');
       const tsConfigPath = path.join(directory, '.tsconfig');
 
       const results = dependencyTree.toList({
-        filename: fixtures('ts', 'a.ts'),
+        filename,
         directory,
         tsConfig: tsConfigPath
       });
 
       assert.equal(results[0], path.join(directory, 'b.ts'));
       assert.equal(results[1], path.join(directory, 'c.ts'));
-      assert.equal(results[2], path.join(directory, 'a.ts'));
+      assert.equal(results[2], filename);
     });
 
     it('supports tsx files', () => {
-      const directory = fixtures('ts');
-
       const results = dependencyTree.toList({
-        filename: fixtures('ts', 'd.tsx'),
+        filename: path.join(directory, 'd.tsx'),
         directory
       });
 
@@ -247,23 +263,19 @@ describe('module formats', () => {
 
     it('recognizes ts file import from js file when allowJs is on (#104)', () => {
       const directory = fixtures('ts', 'mixedTsJs');
+      const filename = path.join(directory, 'a.js');
       const tsConfigPath = path.join(directory, '.tsconfig');
 
       const options = {
-        filename: `${directory}/a.js`,
+        filename,
         directory,
         tsConfig: tsConfigPath
       };
-
       const parsedTsConfig = new Config(options).tsConfig;
 
-      assert.ok(parsedTsConfig.compilerOptions.allowJs);
+      assert.equal(parsedTsConfig.compilerOptions.allowJs, true);
 
-      const results = dependencyTree.toList({
-        filename: `${directory}/a.js`,
-        directory,
-        tsConfig: tsConfigPath
-      });
+      const results = dependencyTree.toList(options);
 
       assert.equal(results[0], path.join(directory, 'b.ts'));
     });

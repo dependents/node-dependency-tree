@@ -16,8 +16,8 @@ function testToList(format, ext = '.js') {
     const filename = path.normalize(`${directory}/a${ext}`);
     const list = dependencyTree.toList({ filename, directory });
 
-    assert.ok(Array.isArray(list));
-    assert.ok(list.length > 0);
+    assert.equal(Array.isArray(list), true);
+    assert.notEqual(list.length, 0);
   });
 }
 
@@ -35,7 +35,7 @@ describe('toList', () => {
     const filename = path.normalize(`${directory}/notafile.js`);
     const list = dependencyTree.toList({ filename, directory });
 
-    assert.ok(Array.isArray(list));
+    assert.equal(Array.isArray(list), true);
     assert.equal(list.length, 0);
   });
 
