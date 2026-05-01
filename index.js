@@ -153,7 +153,7 @@ function traverse(config = {}) {
   for (const dependency of dependencies) {
     const localConfig = config.clone();
     localConfig.filename = dependency;
-    localConfig.directory = getDirectory(localConfig);
+    localConfig.directory = getLocalConfigDirectory(localConfig);
 
     if (localConfig.isListForm) {
       for (const item of traverse(localConfig)) {
@@ -186,24 +186,35 @@ function dedupeNonExistent(nonExistent) {
   }
 }
 
-// For files inside node_modules, resolve from the package root rather than the app root
-function getDirectory(localConfig) {
-  if (!localConfig.filename.includes('node_modules')) {
-    return localConfig.directory;
+// If the file is in a node_modules directory, we want to resolve the root of the package,
+// not the file itself, since the file may be buried in a subdirectory and not contain all
+// of the package's dependencies
+function getLocalConfigDirectory(localConfig) {
+  const { filename, directory } = localConfig;
+
+  if (!filename.includes('node_modules')) {
+    return directory;
   }
 
-  return getProjectPath(path.dirname(localConfig.filename)) || localConfig.directory;
-}
+  const dir = path.dirname(filename);
+  const parts = dir.split('node_modules');
 
-function getProjectPath(filename) {
-  try {
-    const nodeModuleParts = filename.split('node_modules');
-    const packageSubPathPath = nodeModuleParts.pop().split(path.sep).filter(Boolean);
-    const packageName = packageSubPathPath[0].startsWith('@') ? `${packageSubPathPath[0]}${path.sep}${packageSubPathPath[1]}` : packageSubPathPath[0];
-
-    return path.normalize([...nodeModuleParts, `${path.sep}${packageName}`].join('node_modules'));
-  } catch {
-    debug(`Could not determine the root directory of package file ${filename}. Using default`);
-    return null;
+  if (parts.length < 2) {
+    return directory;
   }
+
+  const afterNodeModules = parts.pop();
+  if (!afterNodeModules) {
+    return directory;
+  }
+
+  const segments = afterNodeModules.split(path.sep).filter(Boolean);
+  if (segments.length === 0) {
+    return directory;
+  }
+
+  const packageName = segments[0].startsWith('@') ? `${segments[0]}${path.sep}${segments[1]}` : segments[0];
+  const projectPath = path.normalize(`${parts.join('node_modules')}node_modules${path.sep}${packageName}`);
+
+  return projectPath || directory;
 }
