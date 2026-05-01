@@ -49,6 +49,8 @@ describe('Config', () => {
 describe('noTypeDefinitions', () => {
   const directory = fixtures('noTypeDefinitions');
   const filename = path.join(directory, 'entrypoint.ts');
+  const dtsPath = path.join(directory, 'required.d.ts');
+  const jsPath = path.join(directory, 'required.js');
 
   it('resolves to definition files when set to false', () => {
     const list = dependencyTree.toList({
@@ -57,8 +59,8 @@ describe('noTypeDefinitions', () => {
       noTypeDefinitions: false
     });
 
-    assert.ok(list.includes(path.join(directory, 'required.d.ts')));
-    assert.ok(!list.includes(path.join(directory, 'required.js')));
+    assert.equal(list.includes(dtsPath), true);
+    assert.equal(list.includes(jsPath), false);
   });
 
   it('resolves to JavaScript files when set to true', () => {
@@ -68,7 +70,7 @@ describe('noTypeDefinitions', () => {
       noTypeDefinitions: true
     });
 
-    assert.ok(list.includes(path.join(directory, 'required.js')));
-    assert.ok(!list.includes(path.join(directory, 'required.d.ts')));
+    assert.equal(list.includes(jsPath), true);
+    assert.equal(list.includes(dtsPath), false);
   });
 });
