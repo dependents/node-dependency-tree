@@ -16,7 +16,7 @@ describe('webpack', () => {
   // Note: not mocking because webpack's resolver needs a real project with dependencies;
   // otherwise, we'd have to mock a ton of files.
   const root = path.join(testDir, '../');
-  const webpackConfig = `${root}/webpack.config.js`;
+  const webpackConfig = fixtures('webpack.config.js');
 
   it('resolves aliased modules', () => {
     const results = dependencyTree.toList({
