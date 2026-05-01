@@ -22,6 +22,7 @@ const debug = debuglog('tree');
  * @param {Array}  [options.nonExistent] - Accumulator for unresolvable partials
  * @param {boolean} [options.isListForm=false] - Return a flat list instead of a tree
  * @param {string|Object} [options.tsConfig] - Path to (or preloaded) TypeScript config
+ * @param {string} [options.tsConfigPath] - (Virtual) path to tsconfig when tsConfig is an object; needed for Path Mapping
  * @param {boolean} [options.noTypeDefinitions] - Resolve TS imports to `*.js` instead of `*.d.ts`
  * @returns {Object}
  */
