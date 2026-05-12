@@ -82,7 +82,7 @@ module.exports._getDependencies = function(config = {}) {
   try {
     dependencies = precinct.paperwork(config.filename, precinctOptions);
     debug(`extracted ${dependencies.length} dependencies: `, dependencies);
-  } catch (error) {
+  } catch(error) {
     debug(`error getting dependencies: ${error.message}`);
     debug(error.stack);
     return [];

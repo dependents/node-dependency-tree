@@ -46,71 +46,22 @@
   },
   "homepage": "https://github.com/dependents/node-dependency-tree",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "dependencies": {
     "@discoveryjs/json-ext": "^1.1.0",
-    "commander": "^12.1.0",
-    "filing-cabinet": "^5.5.1",
-    "precinct": "^12.3.2",
-    "typescript": "^5.9.3"
+    "commander": "^14.0.3",
+    "filing-cabinet": "^6.0.0",
+    "precinct": "^13.0.0",
+    "typescript": "^6.0.3"
   },
   "devDependencies": {
-    "c8": "^10.1.3",
+    "c8": "^11.0.0",
     "debug": "^4.4.3",
+    "globals": "^17.6.0",
     "mocha": "^11.7.5",
     "mock-fs": "^5.5.0",
-    "sinon": "^19.0.5",
-    "xo": "^0.60.0"
-  },
-  "xo": {
-    "space": true,
-    "ignores": [
-      "index.d.ts",
-      "test/fixtures/*"
-    ],
-    "rules": {
-      "arrow-body-style": "off",
-      "camelcase": [
-        "error",
-        {
-          "properties": "never"
-        }
-      ],
-      "capitalized-comments": "off",
-      "comma-dangle": [
-        "error",
-        "never"
-      ],
-      "curly": [
-        "error",
-        "multi-line"
-      ],
-      "operator-linebreak": [
-        "error",
-        "after"
-      ],
-      "object-curly-spacing": [
-        "error",
-        "always"
-      ],
-      "prefer-template": "error",
-      "space-before-function-paren": [
-        "error",
-        "never"
-      ],
-      "unicorn/no-anonymous-default-export": "off",
-      "unicorn/prefer-module": "off",
-      "unicorn/prefer-top-level-await": "off",
-      "unicorn/prevent-abbreviations": "off"
-    },
-    "overrides": [
-      {
-        "files": "test/**/*.{c,m}js",
-        "envs": [
-          "mocha"
-        ]
-      }
-    ]
+    "sinon": "^22.0.0",
+    "xo": "^2.0.2"
   }
 }
