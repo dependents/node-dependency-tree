@@ -9,7 +9,7 @@ import Config from '../lib/config.js';
 import dependencyTree from '../index.js';
 import { fixtures } from './helpers.mjs';
 
-const require = createRequire(import.meta.url);
+const { resolve } = createRequire(import.meta.url);
 
 describe('dependencyTree', () => {
   afterEach(() => {
@@ -103,7 +103,7 @@ describe('dependencyTree', () => {
     const subTree = tree[filename];
     const deps = Object.keys(subTree);
 
-    assert.equal(deps.includes(require.resolve('debug')), true);
+    assert.equal(deps.includes(resolve('debug')), true);
   });
 
   it('returns a list of absolutely pathed files', () => {
@@ -181,7 +181,7 @@ describe('dependencyTree', () => {
       filter(filePath, moduleFile) {
         const normalizedModuleFile = moduleFile.replaceAll('\\', '/');
         const expectedPath = path.normalize('test/fixtures/onlyRealDeps/a.js').replaceAll('\\', '/');
-        assert.ok(require.resolve('debug'));
+        assert.ok(resolve('debug'));
         assert.ok(normalizedModuleFile.match(expectedPath));
         return !filePath.includes('node_modules');
       }
@@ -192,7 +192,7 @@ describe('dependencyTree', () => {
     const treeKeys = Object.keys(tree);
 
     assert.notEqual(treeKeys.length, 0);
-    assert.equal(deps.includes(require.resolve('debug')), false);
+    assert.equal(deps.includes(resolve('debug')), false);
   });
 
   it('stores invalid partials in the nonExistent list', () => {

@@ -1,11 +1,9 @@
-'use strict';
-
-const fs = require('node:fs');
-const path = require('node:path');
-const { debuglog } = require('node:util');
-const cabinet = require('filing-cabinet');
-const precinct = require('precinct');
-const Config = require('./lib/config.js');
+import fs from 'node:fs';
+import path from 'node:path';
+import { debuglog } from 'node:util';
+import cabinet from 'filing-cabinet';
+import precinct from 'precinct';
+import Config from './lib/config.js';
 
 const debug = debuglog('tree');
 
@@ -26,7 +24,7 @@ const debug = debuglog('tree');
  * @param {boolean} [options.noTypeDefinitions] - Resolve TS imports to `*.js` instead of `*.d.ts`
  * @returns {Object}
  */
-module.exports = function(options = {}) {
+function dependencyTree(options = {}) {
   const config = new Config(options);
 
   if (!fs.existsSync(config.filename)) {
@@ -53,7 +51,7 @@ module.exports = function(options = {}) {
 
   debug('final tree', tree);
   return tree;
-};
+}
 
 /**
  * Returns a post-order flat list of absolute file paths (dependencies before dependents).
@@ -63,8 +61,8 @@ module.exports = function(options = {}) {
  * @param {Object} options - Same as the default export
  * @returns {Array<string>}
  */
-module.exports.toList = function(options = {}) {
-  return module.exports({ ...options, isListForm: true });
+dependencyTree.toList = function(options = {}) {
+  return dependencyTree({ ...options, isListForm: true });
 };
 
 /**
@@ -74,7 +72,7 @@ module.exports.toList = function(options = {}) {
  * @param {Config} config
  * @returns {Array<string>}
  */
-module.exports._getDependencies = function(config = {}) {
+dependencyTree._getDependencies = function(config = {}) {
   const precinctOptions = config.detectiveConfig;
   precinctOptions.includeCore = false;
   let dependencies;
@@ -138,7 +136,7 @@ function traverse(config = {}) {
     return config.visited[config.filename];
   }
 
-  let dependencies = module.exports._getDependencies(config);
+  let dependencies = dependencyTree._getDependencies(config);
 
   debug('cabinet-resolved all dependencies: ', dependencies);
   // Eagerly mark the current file before recursing so any re-entrant visit exits early
@@ -220,3 +218,5 @@ function getLocalConfigDirectory(localConfig) {
 
   return projectPath;
 }
+
+export default dependencyTree;

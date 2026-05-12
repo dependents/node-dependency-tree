@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
-'use strict';
+import process from 'node:process';
+import { stringifyChunked } from '@discoveryjs/json-ext';
+import { program } from 'commander';
+import dependencyTree from '../index.js';
+import pkg from '../package.json' with { type: 'json' };
 
-const process = require('node:process');
-const { program } = require('commander');
-const { stringifyChunked } = require('@discoveryjs/json-ext');
-const dependencyTree = require('../index.js');
-const { name, description, version } = require('../package.json');
+const { name, description, version } = pkg;
 
 program
   .name(name)
