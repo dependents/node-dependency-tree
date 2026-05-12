@@ -18,7 +18,10 @@ npm install dependency-tree
 ## Usage
 
 ```js
-const dependencyTree = require('dependency-tree');
+// ESM
+import dependencyTree from 'dependency-tree';
+// CommonJS
+const { default: dependencyTree } = require('dependency-tree');
 
 // Returns a nested dependency tree object for the given file
 const tree = dependencyTree({

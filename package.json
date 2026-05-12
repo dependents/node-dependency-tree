@@ -2,8 +2,13 @@
   "name": "dependency-tree",
   "version": "11.5.0",
   "description": "Get the dependency tree of a module",
-  "main": "index.js",
-  "types": "index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    }
+  },
   "files": [
     "bin/cli.js",
     "lib/*.js",
@@ -46,7 +51,7 @@
   },
   "homepage": "https://github.com/dependents/node-dependency-tree",
   "engines": {
-    "node": ">=20"
+    "node": ">=20.19.0 || >=22.12.0"
   },
   "dependencies": {
     "@discoveryjs/json-ext": "^1.1.0",
