@@ -20,11 +20,32 @@ describe('cli', () => {
     assert.match(result.stderr, /Usage: dependency-tree \[options] <filename>/);
   });
 
+  describe('--es6-mixed-imports', () => {
+    it('includes both ESM and CJS dependencies from a mixed file', () => {
+      const dir = fixtures('mixedImports');
+      const entry = path.join(dir, 'entry.js');
+
+      const result = spawnSync(
+        process.execPath,
+        [cliPath, '--directory', dir, '--es6-mixed-imports', '--list-form', entry],
+        { encoding: 'utf8' }
+      );
+
+      assert.equal(result.status, 0, result.stderr);
+
+      const lines = result.stdout.trimEnd().split('\n');
+      const basenames = new Set(lines.map(line => path.basename(line)));
+
+      assert.ok(basenames.has('esm.js'), 'esm.js should be detected');
+      assert.ok(basenames.has('cjs.js'), 'cjs.js should be detected');
+    });
+  });
+
   describe('--list-form output', () => {
     it('prints one dependency per line in post-order', () => {
       // amd/a.js -> b.js -> c.js; post-order: c.js, b.js, a.js
       const dir = fixtures('amd');
-      const entry = fixtures('amd', 'a.js');
+      const entry = path.join(dir, 'a.js');
 
       const result = spawnSync(
         process.execPath,
