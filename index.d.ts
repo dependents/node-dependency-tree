@@ -24,7 +24,6 @@ declare namespace dependencyTree {
   }
 
   function toList(options: Options): string[];
-  function _getDependencies(config: Config): string[];
 }
 
 declare function dependencyTree(
