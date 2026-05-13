@@ -86,7 +86,7 @@ This format was designed for visual representation in the [Dependents](https://g
 Requires a global install: `npm install -g dependency-tree`
 
 ```
-dependency-tree --directory=path/to/files [--list-form] [-c path/to/require/config] [-w path/to/webpack/config] filename
+dependency-tree --directory=path/to/files [--list-form] [--es6-mixed-imports] [-c path/to/require/config] [-w path/to/webpack/config] filename
 ```
 
 Prints the dependency tree as JSON. Use `--list-form` to print one path per line instead.

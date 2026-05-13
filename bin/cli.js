@@ -18,6 +18,7 @@ program
   .option('-c, --require-config <path>', 'path to a requirejs config')
   .option('-w, --webpack-config <path>', 'path to a webpack config')
   .option('-t, --ts-config <path>', 'path to a typescript config')
+  .option('--es6-mixed-imports', 'detect dependencies from files that mix ES6 imports and CJS require() calls')
   .option('--list-form', 'output the list form of the tree (one element per line)')
   .showHelpAfterError()
   .parse();
@@ -28,7 +29,12 @@ const options = {
   root: cliOptions.directory,
   config: cliOptions.requireConfig,
   webpackConfig: cliOptions.webpackConfig,
-  tsConfig: cliOptions.tsConfig
+  tsConfig: cliOptions.tsConfig,
+  detective: {
+    es6: {
+      mixedImports: Boolean(cliOptions.es6MixedImports)
+    }
+  }
 };
 
 if (cliOptions.listForm) {
