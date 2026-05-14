@@ -247,8 +247,11 @@ describe('module formats', () => {
         tsConfig: tsConfigPath
       });
 
-      assert.equal(results[0], path.join(directory, 'b.ts'));
-      assert.equal(results[1], path.join(directory, 'c.ts'));
+      const depB = path.join(directory, 'b.ts');
+      const depC = path.join(directory, 'c.ts');
+
+      assert.equal(results[0], depB);
+      assert.equal(results[1], depC);
       assert.equal(results[2], filename);
     });
 
@@ -258,7 +261,29 @@ describe('module formats', () => {
         directory
       });
 
-      assert.equal(results[0], path.join(directory, 'c.ts'));
+      const depC = path.join(directory, 'c.ts');
+
+      assert.equal(results[0], depC);
+    });
+
+    it('excludes type-only imports when skipTypeImports is set', () => {
+      const filename = path.join(directory, 'type-imports.ts');
+      const results = dependencyTree.toList({
+        filename,
+        directory,
+        detective: {
+          ts: {
+            skipTypeImports: true
+          }
+        }
+      });
+
+      const regularDep = path.join(directory, 'c.ts');
+      const typeOnlyDep = path.join(directory, 'b.ts');
+
+      assert.equal(results.includes(regularDep), true);
+      assert.equal(results.includes(typeOnlyDep), false);
+      assert.equal(results.length, 2);
     });
 
     it('recognizes ts file import from js file when allowJs is on (#104)', () => {
@@ -277,7 +302,9 @@ describe('module formats', () => {
 
       const results = dependencyTree.toList(options);
 
-      assert.equal(results[0], path.join(directory, 'b.ts'));
+      const depB = path.join(directory, 'b.ts');
+
+      assert.equal(results[0], depB);
     });
   });
 });
