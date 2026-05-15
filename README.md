@@ -57,7 +57,7 @@ const list = dependencyTree.toList({
 | `visited` | `object` | `{}` | Memoization cache (`filename → subtree`) to skip already-processed files |
 | `nonExistent` | `string[]` | `[]` | Array populated with partial paths that could not be resolved |
 | `filter` | `(depPath, parentPath) => boolean` | `undefined` | Return `true` to include a dependency (and its subtree) in the tree |
-| `detective` | `object` | `undefined` | Detector options passed to [precinct](https://github.com/dependents/node-precinct#usage) - e.g. `{ amd: { skipLazyLoaded: true } }` |
+| `detective` | `object` | `undefined` | Detective options passed to [precinct](https://github.com/dependents/node-precinct#usage) - e.g. `{ amd: { skipLazyLoaded: true } }`, `{ ts: { skipTypeImports: true } }` |
 | `noTypeDefinitions` | `boolean` | `false` | Resolve TypeScript imports to `*.js` instead of `*.d.ts` |
 
 ### Output format
