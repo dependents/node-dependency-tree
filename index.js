@@ -46,8 +46,9 @@ module.exports = function(options = {}) {
     tree = [...results];
   } else {
     debug('object form of results requested');
-    tree = {};
-    tree[config.filename] = results;
+    tree = {
+      [config.filename]: results
+    };
   }
 
   debug('final tree', tree);
