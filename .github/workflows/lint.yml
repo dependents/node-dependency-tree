@@ -35,3 +35,6 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      - name: Check generated types are up to date
+        run: npm run check:types

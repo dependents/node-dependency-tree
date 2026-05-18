@@ -3,7 +3,7 @@ import globals from 'globals';
 export default [
   {
     ignores: [
-      'index.d.ts',
+      'types/**',
       'test/fixtures/**'
     ]
   },
