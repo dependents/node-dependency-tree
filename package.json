@@ -5,24 +5,26 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./index.d.ts",
+      "types": "./types/index.d.ts",
       "default": "./index.js"
     }
   },
   "files": [
     "bin/cli.js",
     "lib/*.js",
-    "index.d.ts",
+    "types/",
     "index.js"
   ],
   "bin": {
     "dependency-tree": "bin/cli.js"
   },
   "scripts": {
+    "generate:types": "tsc --allowJs --declaration --emitDeclarationOnly --declarationDir types index.js",
+    "check:types": "npm run generate:types && git diff HEAD --exit-code types/index.d.ts",
     "lint": "xo",
     "fix": "xo --fix",
     "mocha": "mocha \"test/*.test.mjs\"",
-    "test": "npm run lint && npm run mocha",
+    "test": "npm run lint && npm run check:types && npm run mocha",
     "test:ci": "c8 npm run mocha"
   },
   "repository": {

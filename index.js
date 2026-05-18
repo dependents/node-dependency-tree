@@ -10,19 +10,8 @@ const debug = debuglog('tree');
 /**
  * Returns the dependency tree of a module as a nested object
  *
- * @param {Object} options
- * @param {string} options.filename - Entry module path
- * @param {string} options.directory - Root directory containing all files
- * @param {string} [options.requireConfig] - Path to a RequireJS config
- * @param {string} [options.webpackConfig] - Path to a webpack config
- * @param {string} [options.nodeModulesConfig] - Config for resolving node_modules entry files
- * @param {Object} [options.visited] - Memoization cache: filename ? subtree
- * @param {Array}  [options.nonExistent] - Accumulator for unresolvable partials
- * @param {boolean} [options.isListForm=false] - Return a flat list instead of a tree
- * @param {string|Object} [options.tsConfig] - Path to (or preloaded) TypeScript config
- * @param {string} [options.tsConfigPath] - (Virtual) path to tsconfig when tsConfig is an object; needed for Path Mapping
- * @param {boolean} [options.noTypeDefinitions] - Resolve TS imports to `*.js` instead of `*.d.ts`
- * @returns {Object}
+ * @param {import('./lib/config.js').ConfigOptions} [options]
+ * @returns {object}
  */
 function dependencyTree(options = {}) {
   const config = new Config(options);
@@ -58,8 +47,8 @@ function dependencyTree(options = {}) {
  * Every file's dependencies appear at lower indices, so the root entry point is last.
  * The list contains no duplicates. Accepts the same options as the default export.
  *
- * @param {Object} options - Same as the default export
- * @returns {Array<string>}
+ * @param {Parameters<typeof dependencyTree>[0]} options - Same as the default export
+ * @returns {string[]}
  */
 dependencyTree.toList = function(options = {}) {
   return dependencyTree({ ...options, isListForm: true });
@@ -69,9 +58,9 @@ dependencyTree.toList = function(options = {}) {
  * Returns resolved dependency paths for the file described by `config`.
  *
  * @param {Config} config
- * @returns {Array<string>}
+ * @returns {string[]}
  */
-function getDependencies(config = {}) {
+function getDependencies(config) {
   const precinctOptions = config.detectiveConfig;
   precinctOptions.includeCore = false;
   let dependencies;
@@ -123,9 +112,9 @@ function getDependencies(config = {}) {
 
 /**
  * @param {Config} config
- * @returns {Object|Set}
+ * @returns {Object|Set<string>}
  */
-function traverse(config = {}) {
+function traverse(config) {
   const subTree = config.isListForm ? new Set() : {};
 
   debug(`traversing ${config.filename}`);
@@ -174,6 +163,9 @@ function traverse(config = {}) {
 }
 
 // Dedupe in-place so the caller's array reference stays valid
+/**
+ * @param {string[]} nonExistent
+ */
 function dedupeNonExistent(nonExistent) {
   const deduped = new Set(nonExistent);
   nonExistent.length = deduped.size;
@@ -188,6 +180,10 @@ function dedupeNonExistent(nonExistent) {
 // If the file is in a node_modules directory, we want to resolve the root of the package,
 // not the file itself, since the file may be buried in a subdirectory and not contain all
 // of the package's dependencies
+/**
+ * @param {Config} localConfig
+ * @returns {string}
+ */
 function getLocalConfigDirectory(localConfig) {
   const { filename, directory } = localConfig;
 

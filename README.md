@@ -33,7 +33,7 @@ const tree = dependencyTree({
   nodeModulesConfig: {
     entry: 'module'
   }, // optional
-  filter: path => !path.includes('node_modules'), // optional
+  filter: (dependencyPath, parentPath) => !dependencyPath.includes('node_modules'), // optional
   nonExistent: [], // optional
   noTypeDefinitions: false // optional
 });
@@ -52,15 +52,19 @@ const list = dependencyTree.toList({
 |---|---|---|---|
 | `filename` | `string` | - | **Required.** Absolute path to the entry file |
 | `directory` | `string` | - | **Required.** Root directory used to resolve relative paths |
+| `root` | `string` | `undefined` | Alias for `directory` |
 | `requireConfig` | `string` | `undefined` | Path to a RequireJS config for AMD modules (resolves aliased paths) |
+| `config` | `string` | `undefined` | Alias for `requireConfig` |
 | `webpackConfig` | `string` | `undefined` | Path to a webpack config for aliased modules |
 | `tsConfig` | `string \| object` | `undefined` | Path to a TypeScript config file, or a preloaded config object |
 | `tsConfigPath` | `string` | `undefined` | Virtual path for the TypeScript config when `tsConfig` is an object. Required for [Path Mapping](https://www.typescriptlang.org/docs/handbook/module-resolution.html#path-mapping); ignored when `tsConfig` is a string path |
 | `nodeModulesConfig` | `object` | `undefined` | Config for resolving `node_modules` entry files (e.g. `{ entry: 'module' }`) |
-| `visited` | `object` | `{}` | Memoization cache (`filename → subtree`) to skip already-processed files |
+| `visited` | `object` | `{}` | Memoization cache (filename to subtree) to skip already-processed files |
 | `nonExistent` | `string[]` | `[]` | Array populated with partial paths that could not be resolved |
-| `filter` | `(depPath, parentPath) => boolean` | `undefined` | Return `true` to include a dependency (and its subtree) in the tree |
-| `detective` | `object` | `undefined` | Detective options passed to [precinct](https://github.com/dependents/node-precinct#usage) - e.g. `{ amd: { skipLazyLoaded: true } }`, `{ ts: { skipTypeImports: true } }` |
+| `isListForm` | `boolean` | `false` | Return a flat post-order list of paths instead of a nested tree (same as calling `dependencyTree.toList()`) |
+| `filter` | `(dependencyPath: string, parentPath: string) => boolean` | `undefined` | Return `true` to include a dependency (and its subtree) in the tree |
+| `detectiveConfig` | `object` | `{}` | Options passed to [precinct](https://github.com/dependents/node-precinct#usage) for dependency extraction - e.g. `{ amd: { skipLazyLoaded: true } }`, `{ ts: { skipTypeImports: true } }` |
+| `detective` | `object` | `{}` | Alias for `detectiveConfig` |
 | `noTypeDefinitions` | `boolean` | `false` | Resolve TypeScript imports to `*.js` instead of `*.d.ts` |
 
 ### Output format
