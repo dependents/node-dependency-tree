@@ -248,7 +248,7 @@ describe('dependencyTree', () => {
           directory,
           filter: 'foobar'
         });
-      }).toThrow(new Error('filter must be a function'));
+      }).toThrow(new TypeError('filter must be a function'));
     });
 
     it('does not throw on the legacy `root` option', () => {
