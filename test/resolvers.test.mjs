@@ -40,6 +40,19 @@ describe('webpack', () => {
 
     assert.equal(results.some(filename => filename.includes(filingCabinetPath)), true);
   });
+
+  it('resolves @ prefixed aliases with absolute path values', () => {
+    const atAliasedSrcPath = path.normalize('webpack/src/foo.js');
+
+    const results = dependencyTree.toList({
+      filename: fixtures('webpack', 'at-aliased.js'),
+      directory: root,
+      webpackConfig,
+      filter: filename => filename.includes(path.join('webpack', 'src'))
+    });
+
+    assert.equal(results.some(filename => filename.includes(atAliasedSrcPath)), true);
+  });
 });
 
 describe('requirejs', () => {
