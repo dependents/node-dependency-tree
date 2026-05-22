@@ -151,8 +151,6 @@ function traverse(config) {
 }
 
 /**
- * Returns a post-order flat list via a single DFS pass - O(N) in unique files.
- *
  * @param {Config} config
  * @returns {Array<string>}
  */
