@@ -1,7 +1,13 @@
-import { strict as assert } from 'node:assert';
 import path from 'node:path';
 import process from 'node:process';
 import mockfs from 'mock-fs';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach
+} from 'vitest';
 import dependencyTree from '../index.js';
 import { fixtures, testDir } from './helpers.js';
 
@@ -9,7 +15,7 @@ function assertResolvesToLodizzle(tree, entryFile) {
   const filename = path.resolve(process.cwd(), entryFile);
   const aliasedFile = path.resolve(process.cwd(), 'root/lodizzle.js').replaceAll('\\', '/');
   const normalizedTreeFilename = Object.keys(tree[filename]).map(f => f.replaceAll('\\', '/'));
-  assert.equal(aliasedFile.includes(normalizedTreeFilename), true);
+  expect(aliasedFile.includes(normalizedTreeFilename)).toBe(true);
 }
 
 describe('webpack', () => {
@@ -27,7 +33,7 @@ describe('webpack', () => {
       filter: filename => filename.includes('filing-cabinet')
     });
 
-    assert.equal(results.some(filename => filename.includes(filingCabinetPath)), true);
+    expect(results.some(filename => filename.includes(filingCabinetPath))).toBe(true);
   });
 
   it('resolves unaliased modules', () => {
@@ -38,7 +44,7 @@ describe('webpack', () => {
       filter: filename => filename.includes('filing-cabinet')
     });
 
-    assert.equal(results.some(filename => filename.includes(filingCabinetPath)), true);
+    expect(results.some(filename => filename.includes(filingCabinetPath))).toBe(true);
   });
 
   it('resolves @ prefixed aliases with absolute path values', () => {
@@ -51,7 +57,7 @@ describe('webpack', () => {
       filter: filename => filename.includes(path.join('webpack', 'src'))
     });
 
-    assert.equal(results.some(filename => filename.includes(atAliasedSrcPath)), true);
+    expect(results.some(filename => filename.includes(atAliasedSrcPath))).toBe(true);
   });
 });
 
@@ -141,6 +147,6 @@ describe('requirejs', () => {
       nonExistent
     });
 
-    assert.equal(nonExistent.includes('phantom'), true);
+    expect(nonExistent).toContain('phantom');
   });
 });

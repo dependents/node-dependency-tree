@@ -1,6 +1,11 @@
-import { strict as assert } from 'node:assert';
 import path from 'node:path';
 import mockfs from 'mock-fs';
+import {
+  describe,
+  it,
+  expect,
+  afterEach
+} from 'vitest';
 import dependencyTree from '../index.js';
 import { fixtures } from './helpers.js';
 
@@ -38,7 +43,7 @@ describe('package-specific node_modules resolution', () => {
       isListForm: true
     });
 
-    assert.equal(treeList.includes(childPath), true);
+    expect(treeList).toContain(childPath);
   });
 
   it('uses correct version of sub package in node module package', () => {
@@ -75,8 +80,8 @@ describe('package-specific node_modules resolution', () => {
       isListForm: true
     });
 
-    assert.equal(treeList.includes(rootChildPath), false);
-    assert.equal(treeList.includes(nestedChildPath), true);
+    expect(treeList).not.toContain(rootChildPath);
+    expect(treeList).toContain(nestedChildPath);
   });
 
   it('falls back to entry directory when a node_modules file has no package subpath', () => {
@@ -97,7 +102,7 @@ describe('package-specific node_modules resolution', () => {
     const subTree = tree[filename];
     const deps = Object.keys(subTree);
 
-    assert.equal(deps.some(dep => dep.includes('flatmod')), true);
+    expect(deps.some(dep => dep.includes('flatmod'))).toBe(true);
   });
 
   it('resolves the project path for a scoped node_modules package', () => {
@@ -123,6 +128,6 @@ describe('package-specific node_modules resolution', () => {
     const subTree = tree[filename];
     const deps = Object.keys(subTree);
 
-    assert.equal(deps.some(dep => dep.includes(path.join('@scope', 'pkg'))), true);
+    expect(deps.some(dep => dep.includes(path.join('@scope', 'pkg')))).toBe(true);
   });
 });

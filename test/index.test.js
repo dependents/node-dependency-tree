@@ -1,10 +1,15 @@
-import { strict as assert } from 'node:assert';
 import path from 'node:path';
 import process from 'node:process';
 import { createRequire } from 'node:module';
 import mockfs from 'mock-fs';
 import precinct from 'precinct';
-import sinon from 'sinon';
+import {
+  describe,
+  it,
+  expect,
+  afterEach,
+  vi
+} from 'vitest';
 import dependencyTree from '../index.js';
 import { fixtures } from './helpers.js';
 
@@ -24,8 +29,7 @@ describe('dependencyTree', () => {
     const filename = `${root}/notafile.js`;
     const tree = dependencyTree({ filename, root });
 
-    assert.ok(tree instanceof Object);
-    assert.equal(Object.keys(tree).length, 0);
+    expect(tree).toStrictEqual({});
   });
 
   it('handles nested tree structures', () => {
@@ -37,11 +41,11 @@ describe('dependencyTree', () => {
     const bTree = subTree[path.normalize(`${directory}/b.js`)];
     const cTree = subTree[path.normalize(`${directory}/c.js`)];
 
-    assert.ok(tree instanceof Object);
-    assert.ok(subTree instanceof Object);
-    assert.equal(Object.keys(subTree).length, 2); // b and c
-    assert.equal(Object.keys(bTree).length, 2); // d and e
-    assert.equal(Object.keys(cTree).length, 2); // f and g
+    expect(tree).toBeInstanceOf(Object);
+    expect(subTree).toBeInstanceOf(Object);
+    expect(Object.keys(subTree)).toHaveLength(2); // b and c
+    expect(Object.keys(bTree)).toHaveLength(2); // d and e
+    expect(Object.keys(cTree)).toHaveLength(2); // f and g
   });
 
   it('does not include files that are not real (#13)', () => {
@@ -58,7 +62,7 @@ describe('dependencyTree', () => {
     const subTree = tree[filename];
     const deps = Object.keys(subTree);
 
-    assert.equal(deps.includes('notReal'), false);
+    expect(deps).not.toContain('notReal');
   });
 
   it('does not choke on cyclic dependencies', () => {
@@ -75,7 +79,7 @@ describe('dependencyTree', () => {
     const tree = dependencyTree({ filename, directory });
     const deps = Object.keys(tree[filename]);
 
-    assert.notEqual(deps.length, 0);
+    expect(deps.length).toBeGreaterThan(0);
   });
 
   it('excludes Node.js core modules by default', () => {
@@ -86,8 +90,8 @@ describe('dependencyTree', () => {
     const deps = Object.keys(tree[filename]);
     const firstKey = Object.keys(tree)[0];
 
-    assert.equal(deps.length, 0);
-    assert.equal(firstKey.includes('b.js'), true);
+    expect(deps).toHaveLength(0);
+    expect(firstKey).toContain('b.js');
   });
 
   it('traverses installed 3rd party node modules', () => {
@@ -98,7 +102,7 @@ describe('dependencyTree', () => {
     const subTree = tree[filename];
     const deps = Object.keys(subTree);
 
-    assert.equal(deps.includes(resolve('debug')), true);
+    expect(deps).toContain(resolve('debug'));
   });
 
   it('returns a list of absolutely pathed files', () => {
@@ -109,7 +113,7 @@ describe('dependencyTree', () => {
 
     for (const node in tree.nodes) {
       if (Object.hasOwn(tree.nodes, node)) {
-        assert.equal(node.includes(process.cwd()), true);
+        expect(node).toContain(process.cwd());
       }
     }
   });
@@ -130,7 +134,7 @@ describe('dependencyTree', () => {
       directory: 'root'
     });
 
-    assert.equal(tree.length, 3);
+    expect(tree).toHaveLength(3);
   });
 
   it('resolves TypeScript imports to their type definition files by default', () => {
@@ -141,12 +145,12 @@ describe('dependencyTree', () => {
 
     const list = dependencyTree.toList({ filename, directory });
 
-    assert.equal(list.includes(dtsPath), true);
-    assert.equal(list.includes(jsPath), false);
+    expect(list).toContain(dtsPath);
+    expect(list).not.toContain(jsPath);
   });
 
   it('passes detective config through to precinct', () => {
-    const spy = sinon.spy(precinct, 'paperwork');
+    const spy = vi.spyOn(precinct, 'paperwork');
     const directory = fixtures('onlyRealDeps');
     const filename = path.normalize(`${directory}/a.js`);
     const detectiveConfig = {
@@ -161,8 +165,8 @@ describe('dependencyTree', () => {
       detective: detectiveConfig
     });
 
-    assert.equal(spy.calledWith(filename, detectiveConfig), true);
-    spy.restore();
+    expect(spy).toHaveBeenCalledWith(filename, detectiveConfig);
+    spy.mockRestore();
   });
 
   it('uses the filter to determine if a file should be included in the results', () => {
@@ -176,8 +180,8 @@ describe('dependencyTree', () => {
       filter(filePath, moduleFile) {
         const normalizedModuleFile = moduleFile.replaceAll('\\', '/');
         const expectedPath = path.normalize('test/fixtures/onlyRealDeps/a.js').replaceAll('\\', '/');
-        assert.ok(resolve('debug'));
-        assert.ok(normalizedModuleFile.match(expectedPath));
+        expect(resolve('debug')).toBeDefined();
+        expect(normalizedModuleFile).toMatch(expectedPath);
         return !filePath.includes('node_modules');
       }
     });
@@ -186,8 +190,8 @@ describe('dependencyTree', () => {
     const deps = Object.keys(subTree);
     const treeKeys = Object.keys(tree);
 
-    assert.notEqual(treeKeys.length, 0);
-    assert.equal(deps.includes(resolve('debug')), false);
+    expect(treeKeys.length).toBeGreaterThan(0);
+    expect(deps).not.toContain(resolve('debug'));
   });
 
   it('stores invalid partials in the nonExistent list', () => {
@@ -203,8 +207,7 @@ describe('dependencyTree', () => {
 
     dependencyTree({ filename, directory, nonExistent });
 
-    assert.equal(nonExistent.length, 1);
-    assert.equal(nonExistent[0], './notReal');
+    expect(nonExistent).toStrictEqual(['./notReal']);
   });
 
   it('does not add valid partials to the nonExistent list', () => {
@@ -221,7 +224,7 @@ describe('dependencyTree', () => {
 
     dependencyTree({ filename, directory, nonExistent });
 
-    assert.equal(nonExistent.length, 0);
+    expect(nonExistent).toStrictEqual([]);
   });
 
   it('stores only invalid partials when there is a mix of valid and invalid', () => {
@@ -239,8 +242,7 @@ describe('dependencyTree', () => {
 
     dependencyTree({ filename, directory, nonExistent });
 
-    assert.equal(nonExistent.length, 1);
-    assert.equal(nonExistent[0], './notRealMan');
+    expect(nonExistent).toStrictEqual(['./notRealMan']);
   });
 
   it('only includes a non-existent partial once when referenced multiple times', () => {
@@ -258,8 +260,7 @@ describe('dependencyTree', () => {
 
     dependencyTree({ filename, directory, nonExistent });
 
-    assert.equal(nonExistent.length, 1);
-    assert.equal(nonExistent[0], './notRealMan');
+    expect(nonExistent).toStrictEqual(['./notRealMan']);
   });
 
   it('stores a Sass partial in nonExistent when the resolved path does not exist on disk', () => {
@@ -275,55 +276,54 @@ describe('dependencyTree', () => {
 
     dependencyTree({ filename, directory, nonExistent });
 
-    assert.equal(nonExistent.length, 1);
-    assert.equal(nonExistent[0], 'missing-partial');
+    expect(nonExistent).toStrictEqual(['missing-partial']);
   });
 
   describe('throws', () => {
     it('throws if the filename is missing', () => {
-      assert.throws(() => {
+      expect(() => {
         dependencyTree({
           filename: undefined,
           directory: fixtures('commonjs')
         });
-      }, /^Error: filename not given$/);
+      }).toThrow(new Error('filename not given'));
     });
 
     it('throws if the root is missing', () => {
-      assert.throws(() => {
+      expect(() => {
         dependencyTree({ undefined });
-      }, /^Error: filename not given$/);
+      }).toThrow(new Error('filename not given'));
     });
 
     it('throws if the directory is missing', () => {
-      assert.throws(() => {
+      expect(() => {
         dependencyTree({
           filename: 'foo.js',
           directory: undefined
         });
-      }, /^Error: directory not given$/);
+      }).toThrow(new Error('directory not given'));
     });
 
     it('throws if a supplied filter is not a function', () => {
       const directory = fixtures('onlyRealDeps');
       const filename = path.normalize(`${directory}/a.js`);
 
-      assert.throws(() => {
+      expect(() => {
         dependencyTree({
           filename,
           directory,
           filter: 'foobar'
         });
-      }, /^Error: filter must be a function$/);
+      }).toThrow(new Error('filter must be a function'));
     });
 
     it('does not throw on the legacy `root` option', () => {
-      assert.doesNotThrow(() => {
+      expect(() => {
         const directory = fixtures('onlyRealDeps');
         const filename = path.normalize(`${directory}/a.js`);
 
         dependencyTree({ filename, root: directory });
-      });
+      }).not.toThrow();
     });
   });
 
@@ -331,24 +331,26 @@ describe('dependencyTree', () => {
     const directory = fixtures('commonjs');
 
     it('does not throw', () => {
-      assert.doesNotThrow(() => {
+      expect(() => {
         dependencyTree({ filename: 'foo', directory });
-      });
+      }).not.toThrow();
     });
 
     it('returns no dependencies', () => {
       const tree = dependencyTree({ filename: 'foo', directory });
-      assert.equal(Object.keys(tree).length, 0);
+      expect(tree).toStrictEqual({});
     });
 
     it('returns empty tree when precinct throws', () => {
-      const stub = sinon.stub(precinct, 'paperwork').throws(new Error('parse error'));
+      const stub = vi.spyOn(precinct, 'paperwork').mockImplementation(() => {
+        throw new Error('parse error');
+      });
       const filename = path.join(directory, 'a.js');
 
       const tree = dependencyTree({ filename, directory });
 
-      assert.deepEqual(tree[filename], {});
-      stub.restore();
+      expect(tree[filename]).toStrictEqual({});
+      stub.mockRestore();
     });
   });
 
@@ -369,7 +371,7 @@ describe('dependencyTree', () => {
       });
       const deps = Object.keys(tree[filename]);
 
-      assert.equal(deps.length, 2);
+      expect(deps).toHaveLength(2);
     });
 
     it('returns the precomputed list of a cached entry point', () => {
@@ -386,7 +388,7 @@ describe('dependencyTree', () => {
         visited: cache
       });
 
-      assert.deepEqual(tree[filename], []);
+      expect(tree[filename]).toStrictEqual([]);
     });
   });
 
@@ -407,8 +409,8 @@ describe('dependencyTree', () => {
 
       const list = dependencyTree.toList({ filename, directory });
 
-      assert.equal(list.includes(helperPath), true);
-      assert.equal(list.includes(subPath), true);
+      expect(list).toContain(helperPath);
+      expect(list).toContain(subPath);
     });
 
     it('resolves the correct root directory for a scoped package in node_modules', () => {
@@ -433,8 +435,8 @@ describe('dependencyTree', () => {
 
       const list = dependencyTree.toList({ filename, directory });
 
-      assert.equal(list.includes(indexPath), true);
-      assert.equal(list.includes(utilPath), true);
+      expect(list).toContain(indexPath);
+      expect(list).toContain(utilPath);
     });
 
     it('resolves sub-dependencies for a package inside nested node_modules', () => {
@@ -461,8 +463,8 @@ describe('dependencyTree', () => {
 
       const list = dependencyTree.toList({ filename, directory });
 
-      assert.equal(list.includes(pkgAPath), true);
-      assert.equal(list.includes(pkgBPath), true);
+      expect(list).toContain(pkgAPath);
+      expect(list).toContain(pkgBPath);
     });
 
     it('does not throw when a file sits directly inside node_modules/ without a package subfolder', () => {
@@ -478,9 +480,9 @@ describe('dependencyTree', () => {
 
       const filename = path.join(directory, 'a.js');
 
-      assert.doesNotThrow(() => {
+      expect(() => {
         dependencyTree.toList({ filename, directory });
-      });
+      }).not.toThrow();
     });
   });
 });

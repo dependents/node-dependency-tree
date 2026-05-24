@@ -1,5 +1,3 @@
-import globals from 'globals';
-
 export default [
   {
     ignores: [
@@ -49,14 +47,6 @@ export default [
       'require-unicode-regexp': 'off',
       'unicorn/prefer-top-level-await': 'off',
       'unicorn/prevent-abbreviations': 'off'
-    }
-  },
-  {
-    files: [
-      'test/**/*.js'
-    ],
-    languageOptions: {
-      globals: globals.mocha
     }
   }
 ];

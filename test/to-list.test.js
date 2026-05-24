@@ -1,6 +1,12 @@
-import { strict as assert } from 'node:assert';
 import path from 'node:path';
 import mockfs from 'mock-fs';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach
+} from 'vitest';
 import dependencyTree from '../index.js';
 import {
   fixtures,
@@ -16,8 +22,8 @@ function testToList(format, ext = '.js') {
     const filename = path.normalize(`${directory}/a${ext}`);
     const list = dependencyTree.toList({ filename, directory });
 
-    assert.equal(Array.isArray(list), true);
-    assert.notEqual(list.length, 0);
+    expect(list).toBeInstanceOf(Array);
+    expect(list.length).toBeGreaterThan(0);
   });
 }
 
@@ -35,8 +41,7 @@ describe('toList', () => {
     const filename = path.normalize(`${directory}/notafile.js`);
     const list = dependencyTree.toList({ filename, directory });
 
-    assert.equal(Array.isArray(list), true);
-    assert.equal(list.length, 0);
+    expect(list).toStrictEqual([]);
   });
 
   it('orders the visited files by last visited', () => {
@@ -44,10 +49,11 @@ describe('toList', () => {
     const filename = path.normalize(`${directory}/a.js`);
     const list = dependencyTree.toList({ filename, directory });
 
-    assert.equal(list.length, 3);
-    assert.equal(path.normalize(list[0]), path.normalize(`${directory}/c.js`));
-    assert.equal(path.normalize(list[1]), path.normalize(`${directory}/b.js`));
-    assert.equal(list.at(-1), filename);
+    expect(list.map(p => path.normalize(p))).toStrictEqual([
+      path.normalize(`${directory}/c.js`),
+      path.normalize(`${directory}/b.js`),
+      filename
+    ]);
   });
 
   describe('module formats', () => {

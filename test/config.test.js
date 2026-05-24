@@ -1,5 +1,5 @@
-import { strict as assert } from 'node:assert';
 import path from 'node:path';
+import { describe, it, expect } from 'vitest';
 import Config from '../lib/config.js';
 import dependencyTree from '../index.js';
 import { fixtures } from './helpers.js';
@@ -13,7 +13,7 @@ describe('Config', () => {
       tsConfig: tsConfigPath
     });
 
-    assert.equal(typeof config.tsConfig, 'object');
+    expect(config.tsConfig).toBeTypeOf('object');
   });
 
   it('includes tsConfigPath so filing-cabinet can resolve compilerOptions.paths', () => {
@@ -24,7 +24,7 @@ describe('Config', () => {
       tsConfig: tsConfigPath
     });
 
-    assert.equal(config.tsConfigPath, tsConfigPath);
+    expect(config.tsConfigPath).toBe(tsConfigPath);
   });
 
   it('retains detective config in the clone', () => {
@@ -42,7 +42,7 @@ describe('Config', () => {
 
     const clone = config.clone();
 
-    assert.deepEqual(clone.detectiveConfig, detectiveConfig);
+    expect(clone.detectiveConfig).toStrictEqual(detectiveConfig);
   });
 });
 
@@ -59,8 +59,8 @@ describe('noTypeDefinitions', () => {
       noTypeDefinitions: false
     });
 
-    assert.equal(list.includes(dtsPath), true);
-    assert.equal(list.includes(jsPath), false);
+    expect(list).toContain(dtsPath);
+    expect(list).not.toContain(jsPath);
   });
 
   it('resolves to JavaScript files when set to true', () => {
@@ -70,7 +70,7 @@ describe('noTypeDefinitions', () => {
       noTypeDefinitions: true
     });
 
-    assert.equal(list.includes(jsPath), true);
-    assert.equal(list.includes(dtsPath), false);
+    expect(list).toContain(jsPath);
+    expect(list).not.toContain(dtsPath);
   });
 });

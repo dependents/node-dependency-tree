@@ -1,6 +1,12 @@
-import { strict as assert } from 'node:assert';
 import path from 'node:path';
 import mockfs from 'mock-fs';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach
+} from 'vitest';
 import Config from '../lib/config.js';
 import dependencyTree from '../index.js';
 import {
@@ -19,9 +25,9 @@ function testTreesForFormat(format, ext = '.js') {
     const tree = dependencyTree({ filename, directory });
     const subTree = tree[filename];
 
-    assert.ok(tree instanceof Object);
-    assert.ok(subTree instanceof Object);
-    assert.equal(Object.keys(subTree).length, 2);
+    expect(tree).toBeInstanceOf(Object);
+    expect(subTree).toBeInstanceOf(Object);
+    expect(Object.keys(subTree)).toHaveLength(2);
   });
 }
 
@@ -54,7 +60,7 @@ describe('module formats', () => {
         const subTree = tree[filename];
         const deps = Object.keys(subTree);
 
-        assert.equal(deps.includes(barPath), true);
+        expect(deps).toContain(barPath);
       });
     });
 
@@ -87,7 +93,7 @@ describe('module formats', () => {
         const subTree = tree[filename];
         const deps = Object.keys(subTree);
 
-        assert.equal(deps.includes(moduleEntryPath), true);
+        expect(deps).toContain(moduleEntryPath);
       });
     });
   });
@@ -107,7 +113,7 @@ describe('module formats', () => {
       const tree = dependencyTree({ filename, directory });
       const subTree = tree[filename];
 
-      assert.ok(subTree[path.normalize(`${directory}/c.js`)]);
+      expect(subTree[path.normalize(`${directory}/c.js`)]).toBeDefined();
     });
 
     it('resolves files with a jsx extension', () => {
@@ -116,7 +122,7 @@ describe('module formats', () => {
       const tree = dependencyTree({ filename, directory });
       const subTree = tree[filename];
 
-      assert.ok(subTree[path.normalize(`${directory}/b.js`)]);
+      expect(subTree[path.normalize(`${directory}/b.js`)]).toBeDefined();
     });
 
     it('resolves files that have es7', () => {
@@ -125,7 +131,7 @@ describe('module formats', () => {
       const tree = dependencyTree({ filename, directory });
       const subTree = tree[filename];
 
-      assert.ok(subTree[path.normalize(`${directory}/c.js`)]);
+      expect(subTree[path.normalize(`${directory}/c.js`)]).toBeDefined();
     });
 
     describe('when given an es6 file using CJS lazy requires', () => {
@@ -154,7 +160,7 @@ describe('module formats', () => {
         const subTree = tree[filename];
         const deps = Object.keys(subTree);
 
-        assert.equal(deps.includes(barPath), true);
+        expect(deps).toContain(barPath);
       });
 
       it('toList includes the lazy dependency when mixedImports is on', () => {
@@ -171,8 +177,7 @@ describe('module formats', () => {
           }
         });
 
-        assert.equal(results[0], barPath);
-        assert.equal(results[1], filename);
+        expect(results).toStrictEqual([barPath, filename]);
       });
 
       it('does not include the lazy dependency when mixedImports is off', () => {
@@ -183,7 +188,7 @@ describe('module formats', () => {
         const subTree = tree[filename];
         const deps = Object.keys(subTree);
 
-        assert.equal(deps.includes(barPath), false);
+        expect(deps).not.toContain(barPath);
       });
     });
 
@@ -203,7 +208,7 @@ describe('module formats', () => {
         const subTree = tree[filename];
         const deps = Object.keys(subTree);
 
-        assert.equal(deps.includes(barPath), true);
+        expect(deps).toContain(barPath);
       });
     });
   });
@@ -250,9 +255,7 @@ describe('module formats', () => {
       const depB = path.join(directory, 'b.ts');
       const depC = path.join(directory, 'c.ts');
 
-      assert.equal(results[0], depB);
-      assert.equal(results[1], depC);
-      assert.equal(results[2], filename);
+      expect(results).toStrictEqual([depB, depC, filename]);
     });
 
     it('supports tsx files', () => {
@@ -263,7 +266,7 @@ describe('module formats', () => {
 
       const depC = path.join(directory, 'c.ts');
 
-      assert.equal(results[0], depC);
+      expect(results[0]).toBe(depC);
     });
 
     it('excludes type-only imports when skipTypeImports is set', () => {
@@ -281,9 +284,9 @@ describe('module formats', () => {
       const regularDep = path.join(directory, 'c.ts');
       const typeOnlyDep = path.join(directory, 'b.ts');
 
-      assert.equal(results.includes(regularDep), true);
-      assert.equal(results.includes(typeOnlyDep), false);
-      assert.equal(results.length, 2);
+      expect(results).toContain(regularDep);
+      expect(results).not.toContain(typeOnlyDep);
+      expect(results).toHaveLength(2);
     });
 
     it('recognizes ts file import from js file when allowJs is on (#104)', () => {
@@ -298,13 +301,13 @@ describe('module formats', () => {
       };
       const parsedTsConfig = new Config(options).tsConfig;
 
-      assert.equal(parsedTsConfig.compilerOptions.allowJs, true);
+      expect(parsedTsConfig.compilerOptions.allowJs).toBe(true);
 
       const results = dependencyTree.toList(options);
 
       const depB = path.join(directory, 'b.ts');
 
-      assert.equal(results[0], depB);
+      expect(results[0]).toBe(depB);
     });
   });
 });
