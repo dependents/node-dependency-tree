@@ -1,13 +1,11 @@
 import path from 'node:path';
 import process from 'node:process';
 import { createRequire } from 'node:module';
-import mockfs from 'mock-fs';
 import precinct from 'precinct';
 import {
   describe,
   it,
   expect,
-  afterEach,
   vi
 } from 'vitest';
 import dependencyTree from '../index.js';
@@ -16,16 +14,8 @@ import { fixtures } from './helpers.js';
 const { resolve } = createRequire(import.meta.url);
 
 describe('dependencyTree', () => {
-  afterEach(() => {
-    mockfs.restore();
-  });
-
   it('returns an empty object for a non-existent filename', () => {
     const root = fixtures('imaginary');
-    mockfs({
-      [root]: {}
-    });
-
     const filename = `${root}/notafile.js`;
     const tree = dependencyTree({ filename, root });
 
@@ -49,13 +39,7 @@ describe('dependencyTree', () => {
   });
 
   it('does not include files that are not real (#13)', () => {
-    const directory = fixtures('onlyRealDeps');
-    mockfs({
-      [directory]: {
-        'a.js': 'var notReal = require("./notReal");'
-      }
-    });
-
+    const directory = fixtures('onlyMissingDep');
     const filename = path.normalize(`${directory}/a.js`);
 
     const tree = dependencyTree({ filename, directory });
@@ -67,13 +51,6 @@ describe('dependencyTree', () => {
 
   it('does not choke on cyclic dependencies', () => {
     const directory = fixtures('cyclic');
-    mockfs({
-      [directory]: {
-        'a.js': 'var b = require("./b");',
-        'b.js': 'var a = require("./a");'
-      }
-    });
-
     const filename = path.normalize(`${directory}/a.js`);
 
     const tree = dependencyTree({ filename, directory });
@@ -119,20 +96,10 @@ describe('dependencyTree', () => {
   });
 
   it('excludes duplicate modules from the tree', () => {
-    mockfs({
-      root: {
-        // More than one module includes c
-        'a.js': `import b from "b";
-                 import c from "c";`,
-        'b.js': 'import c from "c";',
-        'c.js': 'export default 1;'
-      }
-    });
+    const directory = fixtures('duplicateModules');
+    const filename = path.normalize(`${directory}/a.js`);
 
-    const tree = dependencyTree.toList({
-      filename: 'root/a.js',
-      directory: 'root'
-    });
+    const tree = dependencyTree.toList({ filename, directory });
 
     expect(tree).toHaveLength(3);
   });
@@ -195,13 +162,7 @@ describe('dependencyTree', () => {
   });
 
   it('stores invalid partials in the nonExistent list', () => {
-    const directory = fixtures('onlyRealDeps');
-    mockfs({
-      [directory]: {
-        'a.js': 'var notReal = require("./notReal");'
-      }
-    });
-
+    const directory = fixtures('onlyMissingDep');
     const filename = path.normalize(`${directory}/a.js`);
     const nonExistent = [];
 
@@ -211,14 +172,7 @@ describe('dependencyTree', () => {
   });
 
   it('does not add valid partials to the nonExistent list', () => {
-    const directory = fixtures('onlyRealDeps');
-    mockfs({
-      [directory]: {
-        'a.js': 'var b = require("./b");',
-        'b.js': 'export default 1;'
-      }
-    });
-
+    const directory = fixtures('validPartials');
     const filename = path.normalize(`${directory}/a.js`);
     const nonExistent = [];
 
@@ -228,15 +182,7 @@ describe('dependencyTree', () => {
   });
 
   it('stores only invalid partials when there is a mix of valid and invalid', () => {
-    const directory = fixtures('onlyRealDeps');
-    mockfs({
-      [directory]: {
-        'a.js': 'var b = require("./b");',
-        'b.js': 'var c = require("./c"); export default 1;',
-        'c.js': 'var crap = require("./notRealMan");'
-      }
-    });
-
+    const directory = fixtures('mixedPartials');
     const filename = path.normalize(`${directory}/a.js`);
     const nonExistent = [];
 
@@ -246,15 +192,7 @@ describe('dependencyTree', () => {
   });
 
   it('only includes a non-existent partial once when referenced multiple times', () => {
-    const directory = fixtures('onlyRealDeps');
-    mockfs({
-      [directory]: {
-        'a.js': 'var b = require("./b");\nvar crap = require("./notRealMan");',
-        'b.js': 'var c = require("./c"); export default 1;',
-        'c.js': 'var crap = require("./notRealMan");'
-      }
-    });
-
+    const directory = fixtures('repeatedMissing');
     const filename = path.normalize(`${directory}/a.js`);
     const nonExistent = [];
 
@@ -264,13 +202,7 @@ describe('dependencyTree', () => {
   });
 
   it('stores a Sass partial in nonExistent when the resolved path does not exist on disk', () => {
-    const directory = fixtures('sass');
-    mockfs({
-      [directory]: {
-        'a.scss': '@import "missing-partial";'
-      }
-    });
-
+    const directory = fixtures('missingSassPartial');
     const filename = path.normalize(`${directory}/a.scss`);
     const nonExistent = [];
 
@@ -395,14 +327,6 @@ describe('dependencyTree', () => {
   describe('getLocalConfigDirectory', () => {
     it('resolves sub-dependencies of a file whose name contains "node_modules" but whose directory does not', () => {
       const directory = fixtures('nodeModulesInName');
-      mockfs({
-        [directory]: {
-          'a.js': 'var x = require("./node_modules.helper");',
-          'node_modules.helper.js': 'var y = require("./sub");',
-          'sub.js': 'export default 1;'
-        }
-      });
-
       const filename = path.join(directory, 'a.js');
       const helperPath = path.join(directory, 'node_modules.helper.js');
       const subPath = path.join(directory, 'sub.js');
@@ -415,20 +339,6 @@ describe('dependencyTree', () => {
 
     it('resolves the correct root directory for a scoped package in node_modules', () => {
       const directory = fixtures('scopedPackage');
-      mockfs({
-        [directory]: {
-          'a.js': 'var x = require("./node_modules/@scope/pkg/index");',
-          node_modules: {
-            '@scope': {
-              pkg: {
-                'index.js': 'var y = require("./util");',
-                'util.js': 'export default 1;'
-              }
-            }
-          }
-        }
-      });
-
       const filename = path.join(directory, 'a.js');
       const indexPath = path.join(directory, 'node_modules', '@scope', 'pkg', 'index.js');
       const utilPath = path.join(directory, 'node_modules', '@scope', 'pkg', 'util.js');
@@ -441,22 +351,6 @@ describe('dependencyTree', () => {
 
     it('resolves sub-dependencies for a package inside nested node_modules', () => {
       const directory = fixtures('nestedNodeModules');
-      mockfs({
-        [directory]: {
-          'a.js': 'var x = require("./node_modules/pkg-a/index");',
-          node_modules: {
-            'pkg-a': {
-              'index.js': 'var y = require("./node_modules/pkg-b/index");',
-              node_modules: {
-                'pkg-b': {
-                  'index.js': 'export default 1;'
-                }
-              }
-            }
-          }
-        }
-      });
-
       const filename = path.join(directory, 'a.js');
       const pkgAPath = path.join(directory, 'node_modules', 'pkg-a', 'index.js');
       const pkgBPath = path.join(directory, 'node_modules', 'pkg-a', 'node_modules', 'pkg-b', 'index.js');
@@ -469,15 +363,6 @@ describe('dependencyTree', () => {
 
     it('does not throw when a file sits directly inside node_modules/ without a package subfolder', () => {
       const directory = fixtures('directNodeModules');
-      mockfs({
-        [directory]: {
-          'a.js': 'var x = require("./node_modules/direct");',
-          node_modules: {
-            'direct.js': 'export default 1;'
-          }
-        }
-      });
-
       const filename = path.join(directory, 'a.js');
 
       expect(() => {

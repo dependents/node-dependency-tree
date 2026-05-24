@@ -1,21 +1,8 @@
 import path from 'node:path';
-import mockfs from 'mock-fs';
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach
-} from 'vitest';
+import { describe, it, expect } from 'vitest';
 import Config from '../lib/config.js';
 import dependencyTree from '../index.js';
-import {
-  fixtures,
-  mockEs6,
-  mockSass,
-  mockStylus,
-  mockLess
-} from './helpers.js';
+import { fixtures } from './helpers.js';
 
 function testTreesForFormat(format, ext = '.js') {
   it('returns an object form of the dependency tree for a file', () => {
@@ -32,10 +19,6 @@ function testTreesForFormat(format, ext = '.js') {
 }
 
 describe('module formats', () => {
-  afterEach(() => {
-    mockfs.restore();
-  });
-
   describe('amd', () => {
     testTreesForFormat('amd');
   });
@@ -46,13 +29,6 @@ describe('module formats', () => {
     describe('when given a CJS file with lazy requires', () => {
       it('includes the lazy dependency', () => {
         const directory = fixtures('cjs');
-        mockfs({
-          [directory]: {
-            'foo.js': 'module.exports = function(bar = require("./bar")) {};',
-            'bar.js': 'module.exports = 1;'
-          }
-        });
-
         const filename = path.normalize(`${directory}/foo.js`);
         const barPath = path.normalize(`${directory}/bar.js`);
 
@@ -66,20 +42,7 @@ describe('module formats', () => {
 
     describe('when given a CJS file with module property in package.json', () => {
       it('includes the module entry as dependency', () => {
-        const directory = fixtures('es6');
-        mockfs({
-          [directory]: {
-            'module.entry.js': 'import * as module from "module.entry"',
-            node_modules: {
-              'module.entry': {
-                'index.main.js': 'module.exports = function() {};',
-                'index.module.js': 'module.exports = function() {};',
-                'package.json': '{ "main": "index.main.js", "module": "index.module.js" }'
-              }
-            }
-          }
-        });
-
+        const directory = fixtures('es6', 'moduleEntry');
         const filename = path.normalize(`${directory}/module.entry.js`);
         const moduleEntryPath = path.normalize(`${directory}/node_modules/module.entry/index.module.js`);
 
@@ -99,10 +62,6 @@ describe('module formats', () => {
   });
 
   describe('es6', () => {
-    beforeEach(() => {
-      mockEs6();
-    });
-
     const directory = fixtures('es6');
 
     testTreesForFormat('es6');
@@ -135,22 +94,14 @@ describe('module formats', () => {
     });
 
     describe('when given an es6 file using CJS lazy requires', () => {
-      beforeEach(() => {
-        mockfs({
-          [directory]: {
-            'foo.js': 'export default function(bar = require("./bar")) {};',
-            'bar.js': 'export default 1;'
-          }
-        });
-      });
+      const lazyDir = fixtures('es6', 'lazyRequires');
+      const filename = path.normalize(`${lazyDir}/foo.js`);
+      const barPath = path.normalize(`${lazyDir}/bar.js`);
 
       it('includes the lazy dependency when mixedImports is on', () => {
-        const filename = path.normalize(`${directory}/foo.js`);
-        const barPath = path.normalize(`${directory}/bar.js`);
-
         const tree = dependencyTree({
           filename,
-          directory,
+          directory: lazyDir,
           detective: {
             es6: {
               mixedImports: true
@@ -164,12 +115,9 @@ describe('module formats', () => {
       });
 
       it('toList includes the lazy dependency when mixedImports is on', () => {
-        const filename = path.normalize(`${directory}/foo.js`);
-        const barPath = path.normalize(`${directory}/bar.js`);
-
         const results = dependencyTree.toList({
           filename,
-          directory,
+          directory: lazyDir,
           detective: {
             es6: {
               mixedImports: true
@@ -181,10 +129,7 @@ describe('module formats', () => {
       });
 
       it('does not include the lazy dependency when mixedImports is off', () => {
-        const filename = path.normalize(`${directory}/foo.js`);
-        const barPath = path.normalize(`${directory}/bar.js`);
-
-        const tree = dependencyTree({ filename, directory });
+        const tree = dependencyTree({ filename, directory: lazyDir });
         const subTree = tree[filename];
         const deps = Object.keys(subTree);
 
@@ -194,17 +139,11 @@ describe('module formats', () => {
 
     describe('when given an es6 file using dynamic imports', () => {
       it('includes the dynamic import', () => {
-        mockfs({
-          [directory]: {
-            'foo.js': 'import("./bar");',
-            'bar.js': 'export default 1;'
-          }
-        });
+        const dynamicDir = fixtures('es6', 'dynamicImports');
+        const filename = path.normalize(`${dynamicDir}/foo.js`);
+        const barPath = path.normalize(`${dynamicDir}/bar.js`);
 
-        const filename = path.normalize(`${directory}/foo.js`);
-        const barPath = path.normalize(`${directory}/bar.js`);
-
-        const tree = dependencyTree({ filename, directory });
+        const tree = dependencyTree({ filename, directory: dynamicDir });
         const subTree = tree[filename];
         const deps = Object.keys(subTree);
 
@@ -214,26 +153,14 @@ describe('module formats', () => {
   });
 
   describe('sass', () => {
-    beforeEach(() => {
-      mockSass();
-    });
-
     testTreesForFormat('sass', '.scss');
   });
 
   describe('stylus', () => {
-    beforeEach(() => {
-      mockStylus();
-    });
-
     testTreesForFormat('stylus', '.styl');
   });
 
   describe('less', () => {
-    beforeEach(() => {
-      mockLess();
-    });
-
     testTreesForFormat('less', '.less');
   });
 
