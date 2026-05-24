@@ -53,7 +53,7 @@ export default [
   },
   {
     files: [
-      'test/**/*.mjs'
+      'test/**/*.js'
     ],
     languageOptions: {
       globals: globals.mocha

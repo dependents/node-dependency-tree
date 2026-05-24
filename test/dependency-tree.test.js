@@ -6,7 +6,7 @@ import mockfs from 'mock-fs';
 import precinct from 'precinct';
 import sinon from 'sinon';
 import dependencyTree from '../index.js';
-import { fixtures } from './helpers.mjs';
+import { fixtures } from './helpers.js';
 
 const { resolve } = createRequire(import.meta.url);
 

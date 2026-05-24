@@ -2,7 +2,7 @@ import { strict as assert } from 'node:assert';
 import path from 'node:path';
 import Config from '../lib/config.js';
 import dependencyTree from '../index.js';
-import { fixtures } from './helpers.mjs';
+import { fixtures } from './helpers.js';
 
 describe('Config', () => {
   it('pre-parses tsconfig for performance', () => {

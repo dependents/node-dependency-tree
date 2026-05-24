@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { fixtures } from './helpers.mjs';
+import { fixtures } from './helpers.js';
 
 const cliPath = fileURLToPath(new URL('../bin/cli.js', import.meta.url));
 

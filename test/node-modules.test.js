@@ -2,7 +2,7 @@ import { strict as assert } from 'node:assert';
 import path from 'node:path';
 import mockfs from 'mock-fs';
 import dependencyTree from '../index.js';
-import { fixtures } from './helpers.mjs';
+import { fixtures } from './helpers.js';
 
 describe('package-specific node_modules resolution', () => {
   afterEach(() => {

@@ -3,7 +3,7 @@ import path from 'node:path';
 import process from 'node:process';
 import mockfs from 'mock-fs';
 import dependencyTree from '../index.js';
-import { fixtures, testDir } from './helpers.mjs';
+import { fixtures, testDir } from './helpers.js';
 
 function assertResolvesToLodizzle(tree, entryFile) {
   const filename = path.resolve(process.cwd(), entryFile);

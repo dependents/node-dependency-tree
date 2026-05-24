@@ -9,7 +9,7 @@ import {
   mockSass,
   mockStylus,
   mockLess
-} from './helpers.mjs';
+} from './helpers.js';
 
 function testTreesForFormat(format, ext = '.js') {
   it('returns an object form of the dependency tree for a file', () => {

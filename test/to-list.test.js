@@ -8,7 +8,7 @@ import {
   mockSass,
   mockStylus,
   mockLess
-} from './helpers.mjs';
+} from './helpers.js';
 
 function testToList(format, ext = '.js') {
   it('returns a post-order list form of the dependency tree', () => {
