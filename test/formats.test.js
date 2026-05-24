@@ -166,6 +166,8 @@ describe('module formats', () => {
 
   describe('typescript', () => {
     const directory = fixtures('ts');
+    const depB = path.join(directory, 'b.ts');
+    const depC = path.join(directory, 'c.ts');
 
     testTreesForFormat('ts', '.ts');
 
@@ -179,9 +181,6 @@ describe('module formats', () => {
         tsConfig: tsConfigPath
       });
 
-      const depB = path.join(directory, 'b.ts');
-      const depC = path.join(directory, 'c.ts');
-
       expect(results).toStrictEqual([depB, depC, filename]);
     });
 
@@ -190,8 +189,6 @@ describe('module formats', () => {
         filename: path.join(directory, 'd.tsx'),
         directory
       });
-
-      const depC = path.join(directory, 'c.ts');
 
       expect(results[0]).toBe(depC);
     });
@@ -216,25 +213,28 @@ describe('module formats', () => {
       expect(results).toHaveLength(2);
     });
 
-    it('recognizes ts file import from js file when allowJs is on (#104)', () => {
+    describe('mixedTsJs', () => {
       const directory = fixtures('ts', 'mixedTsJs');
-      const filename = path.join(directory, 'a.js');
-      const tsConfigPath = path.join(directory, '.tsconfig');
 
-      const options = {
-        filename,
-        directory,
-        tsConfig: tsConfigPath
-      };
-      const parsedTsConfig = new Config(options).tsConfig;
+      it('recognizes ts file import from js file when allowJs is on (#104)', () => {
+        const filename = path.join(directory, 'a.js');
+        const tsConfigPath = path.join(directory, '.tsconfig');
 
-      expect(parsedTsConfig.compilerOptions.allowJs).toBe(true);
+        const options = {
+          filename,
+          directory,
+          tsConfig: tsConfigPath
+        };
+        const parsedTsConfig = new Config(options).tsConfig;
 
-      const results = dependencyTree.toList(options);
+        expect(parsedTsConfig.compilerOptions.allowJs).toBe(true);
 
-      const depB = path.join(directory, 'b.ts');
+        const results = dependencyTree.toList(options);
 
-      expect(results[0]).toBe(depB);
+        const depB = path.join(directory, 'b.ts');
+
+        expect(results[0]).toBe(depB);
+      });
     });
   });
 });

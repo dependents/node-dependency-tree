@@ -5,7 +5,7 @@ import dependencyTree from '../index.js';
 import { fixtures } from './helpers.js';
 
 describe('Config', () => {
-  it('pre-parses tsconfig for performance', () => {
+  describe('with a tsConfig path', () => {
     const tsConfigPath = fixtures('ts', '.tsconfig');
     const config = new Config({
       filename: 'foo',
@@ -13,18 +13,13 @@ describe('Config', () => {
       tsConfig: tsConfigPath
     });
 
-    expect(config.tsConfig).toBeTypeOf('object');
-  });
-
-  it('includes tsConfigPath so filing-cabinet can resolve compilerOptions.paths', () => {
-    const tsConfigPath = fixtures('ts', '.tsconfig');
-    const config = new Config({
-      filename: 'foo',
-      directory: 'bar',
-      tsConfig: tsConfigPath
+    it('pre-parses tsconfig for performance', () => {
+      expect(config.tsConfig).toBeTypeOf('object');
     });
 
-    expect(config.tsConfigPath).toBe(tsConfigPath);
+    it('includes tsConfigPath so filing-cabinet can resolve compilerOptions.paths', () => {
+      expect(config.tsConfigPath).toBe(tsConfigPath);
+    });
   });
 
   it('retains detective config in the clone', () => {

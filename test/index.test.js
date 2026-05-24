@@ -161,54 +161,56 @@ describe('dependencyTree', () => {
     expect(deps).not.toContain(resolve('debug'));
   });
 
-  it('stores invalid partials in the nonExistent list', () => {
-    const directory = fixtures('onlyMissingDep');
-    const filename = path.normalize(`${directory}/a.js`);
-    const nonExistent = [];
+  describe('nonExistent option', () => {
+    it('stores invalid partials in the nonExistent list', () => {
+      const directory = fixtures('onlyMissingDep');
+      const filename = path.normalize(`${directory}/a.js`);
+      const nonExistent = [];
 
-    dependencyTree({ filename, directory, nonExistent });
+      dependencyTree({ filename, directory, nonExistent });
 
-    expect(nonExistent).toStrictEqual(['./notReal']);
-  });
+      expect(nonExistent).toStrictEqual(['./notReal']);
+    });
 
-  it('does not add valid partials to the nonExistent list', () => {
-    const directory = fixtures('validPartials');
-    const filename = path.normalize(`${directory}/a.js`);
-    const nonExistent = [];
+    it('does not add valid partials to the nonExistent list', () => {
+      const directory = fixtures('validPartials');
+      const filename = path.normalize(`${directory}/a.js`);
+      const nonExistent = [];
 
-    dependencyTree({ filename, directory, nonExistent });
+      dependencyTree({ filename, directory, nonExistent });
 
-    expect(nonExistent).toStrictEqual([]);
-  });
+      expect(nonExistent).toStrictEqual([]);
+    });
 
-  it('stores only invalid partials when there is a mix of valid and invalid', () => {
-    const directory = fixtures('mixedPartials');
-    const filename = path.normalize(`${directory}/a.js`);
-    const nonExistent = [];
+    it('stores only invalid partials when there is a mix of valid and invalid', () => {
+      const directory = fixtures('mixedPartials');
+      const filename = path.normalize(`${directory}/a.js`);
+      const nonExistent = [];
 
-    dependencyTree({ filename, directory, nonExistent });
+      dependencyTree({ filename, directory, nonExistent });
 
-    expect(nonExistent).toStrictEqual(['./notRealMan']);
-  });
+      expect(nonExistent).toStrictEqual(['./notRealMan']);
+    });
 
-  it('only includes a non-existent partial once when referenced multiple times', () => {
-    const directory = fixtures('repeatedMissing');
-    const filename = path.normalize(`${directory}/a.js`);
-    const nonExistent = [];
+    it('only includes a non-existent partial once when referenced multiple times', () => {
+      const directory = fixtures('repeatedMissing');
+      const filename = path.normalize(`${directory}/a.js`);
+      const nonExistent = [];
 
-    dependencyTree({ filename, directory, nonExistent });
+      dependencyTree({ filename, directory, nonExistent });
 
-    expect(nonExistent).toStrictEqual(['./notRealMan']);
-  });
+      expect(nonExistent).toStrictEqual(['./notRealMan']);
+    });
 
-  it('stores a Sass partial in nonExistent when the resolved path does not exist on disk', () => {
-    const directory = fixtures('missingSassPartial');
-    const filename = path.normalize(`${directory}/a.scss`);
-    const nonExistent = [];
+    it('stores a Sass partial in nonExistent when the resolved path does not exist on disk', () => {
+      const directory = fixtures('missingSassPartial');
+      const filename = path.normalize(`${directory}/a.scss`);
+      const nonExistent = [];
 
-    dependencyTree({ filename, directory, nonExistent });
+      dependencyTree({ filename, directory, nonExistent });
 
-    expect(nonExistent).toStrictEqual(['missing-partial']);
+      expect(nonExistent).toStrictEqual(['missing-partial']);
+    });
   });
 
   describe('throws', () => {
@@ -250,10 +252,10 @@ describe('dependencyTree', () => {
     });
 
     it('does not throw on the legacy `root` option', () => {
-      expect(() => {
-        const directory = fixtures('onlyRealDeps');
-        const filename = path.normalize(`${directory}/a.js`);
+      const directory = fixtures('onlyRealDeps');
+      const filename = path.normalize(`${directory}/a.js`);
 
+      expect(() => {
         dependencyTree({ filename, root: directory });
       }).not.toThrow();
     });
@@ -287,9 +289,10 @@ describe('dependencyTree', () => {
   });
 
   describe('memoization (#2)', () => {
+    const directory = fixtures('amd');
+    const filename = path.join(directory, 'a.js');
+
     it('accepts a cache object for memoization (#2)', () => {
-      const directory = fixtures('amd');
-      const filename = path.join(directory, 'a.js');
       const bFile = path.join(directory, 'b.js');
       const cFile = path.join(directory, 'c.js');
       const cache = {
@@ -307,9 +310,6 @@ describe('dependencyTree', () => {
     });
 
     it('returns the precomputed list of a cached entry point', () => {
-      const directory = fixtures('amd');
-      const filename = path.join(directory, 'a.js');
-
       const cache = {
         [filename]: [] // Shouldn't process the first file's tree
       };
