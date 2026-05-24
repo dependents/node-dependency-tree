@@ -1,14 +1,7 @@
-import { strict as assert } from 'node:assert';
 import path from 'node:path';
-import mockfs from 'mock-fs';
+import { describe, it, expect } from 'vitest';
 import dependencyTree from '../index.js';
-import {
-  fixtures,
-  mockEs6,
-  mockSass,
-  mockStylus,
-  mockLess
-} from './helpers.js';
+import { fixtures } from './helpers.js';
 
 function testToList(format, ext = '.js') {
   it('returns a post-order list form of the dependency tree', () => {
@@ -16,27 +9,18 @@ function testToList(format, ext = '.js') {
     const filename = path.normalize(`${directory}/a${ext}`);
     const list = dependencyTree.toList({ filename, directory });
 
-    assert.equal(Array.isArray(list), true);
-    assert.notEqual(list.length, 0);
+    expect(list).toBeInstanceOf(Array);
+    expect(list.length).toBeGreaterThan(0);
   });
 }
 
 describe('toList', () => {
-  afterEach(() => {
-    mockfs.restore();
-  });
-
   it('returns an empty list on a non-existent filename', () => {
     const directory = fixtures('imaginary');
-    mockfs({
-      [directory]: {}
-    });
-
     const filename = path.normalize(`${directory}/notafile.js`);
     const list = dependencyTree.toList({ filename, directory });
 
-    assert.equal(Array.isArray(list), true);
-    assert.equal(list.length, 0);
+    expect(list).toStrictEqual([]);
   });
 
   it('orders the visited files by last visited', () => {
@@ -44,10 +28,11 @@ describe('toList', () => {
     const filename = path.normalize(`${directory}/a.js`);
     const list = dependencyTree.toList({ filename, directory });
 
-    assert.equal(list.length, 3);
-    assert.equal(path.normalize(list[0]), path.normalize(`${directory}/c.js`));
-    assert.equal(path.normalize(list[1]), path.normalize(`${directory}/b.js`));
-    assert.equal(list.at(-1), filename);
+    expect(list.map(p => path.normalize(p))).toStrictEqual([
+      path.normalize(`${directory}/c.js`),
+      path.normalize(`${directory}/b.js`),
+      filename
+    ]);
   });
 
   describe('module formats', () => {
@@ -60,34 +45,18 @@ describe('toList', () => {
     });
 
     describe('es6', () => {
-      beforeEach(() => {
-        mockEs6();
-      });
-
       testToList('es6');
     });
 
     describe('sass', () => {
-      beforeEach(() => {
-        mockSass();
-      });
-
       testToList('sass', '.scss');
     });
 
     describe('stylus', () => {
-      beforeEach(() => {
-        mockStylus();
-      });
-
       testToList('stylus', '.styl');
     });
 
     describe('less', () => {
-      beforeEach(() => {
-        mockLess();
-      });
-
       testToList('less', '.less');
     });
 

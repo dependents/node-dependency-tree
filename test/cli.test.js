@@ -1,10 +1,10 @@
-import { strict as assert } from 'node:assert';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
+import { describe, it, expect } from 'vitest';
 import { fixtures } from './helpers.js';
 
 const cliPath = fileURLToPath(new URL('../bin/cli.js', import.meta.url));
@@ -15,9 +15,9 @@ describe('cli', () => {
       encoding: 'utf8'
     });
 
-    assert.equal(result.status, 1);
-    assert.match(result.stderr, /error: missing required argument 'filename'/);
-    assert.match(result.stderr, /Usage: dependency-tree \[options] <filename>/);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toMatch(/error: missing required argument 'filename'/);
+    expect(result.stderr).toMatch(/Usage: dependency-tree \[options] <filename>/);
   });
 
   describe('--es6-mixed-imports', () => {
@@ -31,13 +31,13 @@ describe('cli', () => {
         { encoding: 'utf8' }
       );
 
-      assert.equal(result.status, 0, result.stderr);
+      expect(result.status).toBe(0);
 
       const lines = result.stdout.trimEnd().split('\n');
       const basenames = new Set(lines.map(line => path.basename(line)));
 
-      assert.ok(basenames.has('esm.js'), 'esm.js should be detected');
-      assert.ok(basenames.has('cjs.js'), 'cjs.js should be detected');
+      expect(basenames).toContain('esm.js');
+      expect(basenames).toContain('cjs.js');
     });
   });
 
@@ -53,19 +53,17 @@ describe('cli', () => {
         { encoding: 'utf8' }
       );
 
-      assert.equal(result.status, 0, result.stderr);
+      expect(result.status).toBe(0);
 
       const lines = result.stdout.trimEnd().split('\n');
 
-      assert.equal(lines.length, 3);
-      assert.equal(path.resolve(lines.at(-1)), path.resolve(entry));
+      expect(lines).toHaveLength(3);
+      expect(path.resolve(lines.at(-1))).toBe(path.resolve(entry));
     });
   });
 
   describe('default (non-list) output', () => {
-    it('does not crash where JSON.stringify would exceed V8 string length limits (issue #141)', function() {
-      this.timeout(20_000);
-
+    it('does not crash where JSON.stringify would exceed V8 string length limits (issue #141)', () => {
       // Build a diamond dependency fixture: every pair at depth k requires both
       // files at depth k+1. traverse() memoises via config.visited and returns
       // the SAME JS object reference for every re-visit of a file, so
@@ -104,10 +102,10 @@ describe('cli', () => {
           { stdio: ['ignore', 'ignore', 'pipe'], encoding: 'utf8' }
         );
 
-        assert.equal(result.status, 0, result.stderr);
+        expect(result.status).toBe(0);
       } finally {
         fs.rmSync(tmpDir, { recursive: true, force: true });
       }
-    });
+    }, 20_000);
   });
 });

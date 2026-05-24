@@ -1,0 +1,1 @@
+define(["phantom"], function(p) {});

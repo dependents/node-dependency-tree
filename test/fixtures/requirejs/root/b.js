@@ -1,0 +1,5 @@
+define([
+  './lodizzle'
+], function(F) {
+
+});

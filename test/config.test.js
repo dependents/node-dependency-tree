@@ -1,11 +1,11 @@
-import { strict as assert } from 'node:assert';
 import path from 'node:path';
+import { describe, it, expect } from 'vitest';
 import Config from '../lib/config.js';
 import dependencyTree from '../index.js';
 import { fixtures } from './helpers.js';
 
 describe('Config', () => {
-  it('pre-parses tsconfig for performance', () => {
+  describe('with a tsConfig path', () => {
     const tsConfigPath = fixtures('ts', '.tsconfig');
     const config = new Config({
       filename: 'foo',
@@ -13,18 +13,13 @@ describe('Config', () => {
       tsConfig: tsConfigPath
     });
 
-    assert.equal(typeof config.tsConfig, 'object');
-  });
-
-  it('includes tsConfigPath so filing-cabinet can resolve compilerOptions.paths', () => {
-    const tsConfigPath = fixtures('ts', '.tsconfig');
-    const config = new Config({
-      filename: 'foo',
-      directory: 'bar',
-      tsConfig: tsConfigPath
+    it('pre-parses tsconfig for performance', () => {
+      expect(config.tsConfig).toBeTypeOf('object');
     });
 
-    assert.equal(config.tsConfigPath, tsConfigPath);
+    it('includes tsConfigPath so filing-cabinet can resolve compilerOptions.paths', () => {
+      expect(config.tsConfigPath).toBe(tsConfigPath);
+    });
   });
 
   it('retains detective config in the clone', () => {
@@ -42,7 +37,7 @@ describe('Config', () => {
 
     const clone = config.clone();
 
-    assert.deepEqual(clone.detectiveConfig, detectiveConfig);
+    expect(clone.detectiveConfig).toStrictEqual(detectiveConfig);
   });
 });
 
@@ -59,8 +54,8 @@ describe('noTypeDefinitions', () => {
       noTypeDefinitions: false
     });
 
-    assert.equal(list.includes(dtsPath), true);
-    assert.equal(list.includes(jsPath), false);
+    expect(list).toContain(dtsPath);
+    expect(list).not.toContain(jsPath);
   });
 
   it('resolves to JavaScript files when set to true', () => {
@@ -70,7 +65,7 @@ describe('noTypeDefinitions', () => {
       noTypeDefinitions: true
     });
 
-    assert.equal(list.includes(jsPath), true);
-    assert.equal(list.includes(dtsPath), false);
+    expect(list).toContain(jsPath);
+    expect(list).not.toContain(dtsPath);
   });
 });

@@ -23,9 +23,9 @@
     "check:types": "npm run generate:types && git diff HEAD --exit-code types/index.d.ts",
     "lint": "xo",
     "fix": "xo --fix",
-    "mocha": "mocha \"test/*.test.js\"",
-    "test": "npm run lint && npm run check:types && npm run mocha",
-    "test:ci": "c8 npm run mocha"
+    "vitest": "vitest",
+    "test": "npm run lint && npm run check:types && vitest run",
+    "test:ci": "vitest run --coverage"
   },
   "repository": {
     "type": "git",
@@ -63,12 +63,9 @@
     "typescript": "^6.0.3"
   },
   "devDependencies": {
-    "c8": "^11.0.0",
+    "@vitest/coverage-v8": "^4.1.7",
     "debug": "^4.4.3",
-    "globals": "^17.6.0",
-    "mocha": "^11.7.5",
-    "mock-fs": "^5.5.0",
-    "sinon": "^22.0.0",
+    "vitest": "^4.1.7",
     "xo": "^2.0.2"
   }
 }
