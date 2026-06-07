@@ -1,6 +1,6 @@
 {
   "name": "dependency-tree",
-  "version": "12.0.0",
+  "version": "12.0.1",
   "description": "Get the dependency tree of a module",
   "type": "module",
   "exports": {
