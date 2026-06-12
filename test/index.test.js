@@ -59,6 +59,17 @@ describe('dependencyTree', () => {
     expect(deps.length).toBeGreaterThan(0);
   });
 
+  it('detects dependencies of an extensionless executable script', () => {
+    const directory = fixtures('extensionless');
+    const filename = path.join(directory, 'www');
+
+    const list = dependencyTree.toList({ filename, directory });
+
+    expect(list).toContain(path.join(directory, 'foo.js'));
+    expect(list).toContain(path.join(directory, 'bar.js'));
+    expect(list).toContain(filename);
+  });
+
   it('excludes Node.js core modules by default', () => {
     const directory = fixtures('commonjs');
     const filename = path.normalize(`${directory}/b.js`);
