@@ -59,13 +59,13 @@
     "@discoveryjs/json-ext": "^1.1.0",
     "commander": "^14.0.3",
     "filing-cabinet": "^6.0.0",
-    "precinct": "^13.0.0",
+    "precinct": "^13.0.1",
     "typescript": "^6.0.3"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^4.1.7",
+    "@vitest/coverage-v8": "^4.1.10",
     "debug": "^4.4.3",
-    "vitest": "^4.1.7",
+    "vitest": "^4.1.10",
     "xo": "^2.0.2"
   }
 }
