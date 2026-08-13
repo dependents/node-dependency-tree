@@ -69,6 +69,10 @@ function getDependencies(config) {
     dependencies = precinct.paperwork(config.filename, precinctOptions);
     debug(`extracted ${dependencies.length} dependencies: `, dependencies);
   } catch(error) {
+    // A file that fails to parse yields no dependencies, but a missing "typescript" peer
+    // dependency is a setup problem: swallowing it would silently produce an empty tree
+    if (error.code === 'ERR_TYPESCRIPT_UNAVAILABLE') throw error;
+
     debug(`error getting dependencies: ${error.message}`);
     debug(error.stack);
     return [];
